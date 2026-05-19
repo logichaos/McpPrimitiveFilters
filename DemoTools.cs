@@ -2,7 +2,7 @@ using System.ComponentModel;
 using Microsoft.AspNetCore.Authorization;
 using ModelContextProtocol.Server;
 
-namespace testy;
+namespace AuthenticatedHttpMcpServer;
 
 [McpServerToolType]
 public class DemoTools

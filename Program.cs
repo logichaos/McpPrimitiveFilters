@@ -1,5 +1,5 @@
 using ModelContextProtocol.AspNetCore;
-using testy;
+using AuthenticatedHttpMcpServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
