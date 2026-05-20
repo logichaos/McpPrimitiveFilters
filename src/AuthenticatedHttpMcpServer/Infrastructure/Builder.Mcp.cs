@@ -1,4 +1,5 @@
 using AuthenticatedHttpMcpServer.Infrastructure.ToolSelection;
+using ModelContextProtocol.Server;
 
 namespace AuthenticatedHttpMcpServer.Infrastructure;
 
@@ -18,9 +19,10 @@ public static partial class ApiBuilder
 
         opts.ConfigureSessionOptions = (ctx, mcpOpts, _) =>
         {
-          var registry = ctx.RequestServices.GetRequiredService<McpToolRegistry>();
-          var toolSelectionStrategy = ctx.RequestServices.GetRequiredService<HttpContextToolSelectionStrategy>();
-          var userTools = registry.GetToolsForClaimsPrincipal(ctx, toolSelectionStrategy);
+          McpToolRegistry registry = ctx.RequestServices.GetRequiredService<McpToolRegistry>();
+          HttpContextToolSelectionStrategy toolSelectionStrategy =
+            ctx.RequestServices.GetRequiredService<HttpContextToolSelectionStrategy>();
+          IEnumerable<McpServerTool> userTools = registry.GetToolsForClaimsPrincipal(ctx, toolSelectionStrategy);
           mcpOpts.ToolCollection = [.. userTools];
 
           return Task.CompletedTask;

@@ -1,5 +1,5 @@
+using System.Security.Claims;
 using AspNetCore.Authentication.ApiKey;
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.JsonWebTokens;
 
@@ -14,9 +14,13 @@ public static partial class ApiBuilder
       OnValidateKey = context =>
       {
         if (context.ApiKey == "Lifetime Subscription")
+        {
           context.ValidationSucceeded();
+        }
         else
+        {
           context.ValidationFailed();
+        }
 
         return Task.CompletedTask;
       }
@@ -43,7 +47,8 @@ public static partial class ApiBuilder
         }
         else
         {
-          options.Authority = $"https://login.microsoftonline.com/{GlobalConfigurations.ApiSettings?.EntraId?.TenantId ?? "entraid"}/v2.0";
+          options.Authority =
+            $"https://login.microsoftonline.com/{GlobalConfigurations.ApiSettings?.EntraId?.TenantId ?? "entraid"}/v2.0";
         }
 
         options.Events = new JwtBearerEvents
@@ -67,8 +72,10 @@ public static partial class ApiBuilder
 
             if (ctx.Principal?.Claims is { } claims)
             {
-              foreach (var claim in claims)
+              foreach (Claim claim in claims)
+              {
                 Console.WriteLine($"Claim: {claim.Type} = {claim.Value}");
+              }
             }
 
             return Task.CompletedTask;
@@ -81,7 +88,7 @@ public static partial class ApiBuilder
       {
         policy.RequireAuthenticatedUser();
         policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
-        policy.RequireRole([Constants.Auth.Roles.McpCaller, Constants.Auth.Roles.Awesome]);
+        policy.RequireRole(Constants.Auth.Roles.McpCaller, Constants.Auth.Roles.Awesome);
       })
       .AddPolicy(Constants.Auth.Policies.McpSubscription, policy =>
       {

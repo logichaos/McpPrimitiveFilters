@@ -1,11 +1,11 @@
 namespace AuthenticatedHttpMcpServer.Infrastructure;
 
-public static class Constants
+internal static partial class Constants
 {
-
   public static class Auth
   {
     public const string AzureApiKeyName = "Ocp-Apim-Subscription-Key";
+
     public static class Policies
     {
       public const string MrAwesome = "mrawesome";
@@ -18,6 +18,7 @@ public static class Constants
       public const string Awesome = "awesome";
     }
   }
+
   public static class RateLimit
   {
     public static class Policies

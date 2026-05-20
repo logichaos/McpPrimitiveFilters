@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AuthenticatedHttpMcpServer/AuthenticatedHttpMcpServer.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AuthenticatedHttpMcpServer.Tests/AuthenticatedHttpMcpServer.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,6 +1,6 @@
-using Microsoft.IdentityModel.Tokens;
 using System.Threading.RateLimiting;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AuthenticatedHttpMcpServer.Infrastructure;
 
