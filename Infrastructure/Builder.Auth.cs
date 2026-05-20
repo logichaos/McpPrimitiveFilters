@@ -1,5 +1,3 @@
-using System.Security.Claims;
-
 using AspNetCore.Authentication.ApiKey;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -27,16 +25,15 @@ public static partial class ApiBuilder
     _ = services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
       .AddApiKeyInHeader($"{ApiKeyDefaults.AuthenticationScheme}-Header", options =>
       {
-        options.KeyName = AuthConstants.AzureApiKeyName;
+        options.KeyName = Constants.Auth.AzureApiKeyName;
         options.Realm = "API";
         options.Events = apiKeyEvents;
       })
       .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
       {
-        var tvp = GlobalConfigurations.ApiSettings!.TokenValidation;
-        options.TokenValidationParameters.ValidIssuers = tvp.ValidIssuers;
-        options.TokenValidationParameters.ValidAudiences = tvp.ValidAudiences;
-        
+        options.TokenValidationParameters.ValidAudiences =
+          GlobalConfigurations.ApiSettings?.TokenValidation.ValidAudiences;
+        options.TokenValidationParameters.ValidIssuers = GlobalConfigurations.ApiSettings?.TokenValidation.ValidIssuers;
         if (environment.IsDevelopment())
         {
           options.TokenValidationParameters.RequireSignedTokens = false;
@@ -68,7 +65,7 @@ public static partial class ApiBuilder
             Console.WriteLine("✅ Token validated:");
             Console.WriteLine("Name: " + ctx.Principal?.Identity?.Name);
 
-            if (ctx.Principal?.Claims is IEnumerable<Claim> claims)
+            if (ctx.Principal?.Claims is { } claims)
             {
               foreach (var claim in claims)
                 Console.WriteLine($"Claim: {claim.Type} = {claim.Value}");
@@ -79,38 +76,19 @@ public static partial class ApiBuilder
         };
       });
 
-    services.AddAuthorization(options =>
-    {
-      options.AddPolicy(AuthConstants.Policies.MrAwesome, policy =>
+    services.AddAuthorizationBuilder()
+      .AddPolicy(Constants.Auth.Policies.MrAwesome, policy =>
       {
         policy.RequireAuthenticatedUser();
         policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
-        policy.RequireRole([AuthConstants.Roles.McpCaller, AuthConstants.Roles.Awesome]);
-      });
-      options.AddPolicy(AuthConstants.Policies.McpSubscription, policy =>
+        policy.RequireRole([Constants.Auth.Roles.McpCaller, Constants.Auth.Roles.Awesome]);
+      })
+      .AddPolicy(Constants.Auth.Policies.McpSubscription, policy =>
       {
         policy.RequireAuthenticatedUser();
         policy.AuthenticationSchemes.Add($"{ApiKeyDefaults.AuthenticationScheme}-Header");
       });
-    });
 
     return services;
-  }
-
-  public static class AuthConstants
-  {
-    public const string AzureApiKeyName = "Ocp-Apim-Subscription-Key";
-
-    public static class Policies
-    {
-      public const string MrAwesome = "mrawesome";
-      public const string McpSubscription = "mcp_subscription";
-    }
-
-    public static class Roles
-    {
-      public const string McpCaller = "mcpcaller";
-      public const string Awesome = "awesome";
-    }
   }
 }

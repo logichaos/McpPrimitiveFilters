@@ -18,9 +18,9 @@ public static partial class ApiBuilder
         return RateLimitPartition.GetFixedWindowLimiter(
           partitionKey:
             httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? httpContext.Request.Headers[AuthConstants.AzureApiKeyName].ToString(),
+            ?? httpContext.Request.Headers[Constants.Auth.AzureApiKeyName].ToString(),
             factory:
-              partition => GlobalConfigurations.ApiSettings!.FixedWindowRateLimit
+              _ => GlobalConfigurations.ApiSettings.FixedWindowRateLimit
         );
       }).OnRejected = async (context, cancellationToken) =>
       {
@@ -30,18 +30,11 @@ public static partial class ApiBuilder
           context.HttpContext.Response.ContentType = "text/plain";
           await context.HttpContext.Response.WriteAsync($"Rate limit reached. Please try again after {retryAfter.TotalSeconds} seconds.", cancellationToken: cancellationToken);
         }
-        return;
       };
     });
-    
+
     return services;
   }
-  
-  public static class RateLimit
-  {
-    public static class Policies
-    {
-      public const string Fixed = "fixed";
-    }
-  }
+
+
 }

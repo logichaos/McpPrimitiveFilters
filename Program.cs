@@ -4,11 +4,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 GlobalConfigurations.ApiSettings = builder.Configuration.GetRequiredSection("ApiSettings").Get<SettingsModel>()!;
 
-builder.Services
-  .AddMcpServer()
-  .AddAuthorizationFilters()
-  .WithHttpTransport()
-  .WithToolsFromAssembly();
+builder.Services.AddMcp();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddRateLimitServices();
@@ -24,10 +20,10 @@ app.UseRateLimiter();
 
 app.MapMcp("/mcp")
   .RequireAuthorization()
-  .RequireRateLimiting(ApiBuilder.RateLimit.Policies.Fixed);
+  .RequireRateLimiting(Constants.RateLimit.Policies.Fixed);
 
 app.MapHealthChecks("/health")
-  .RequireAuthorization(ApiBuilder.AuthConstants.Policies.MrAwesome)
-  .RequireRateLimiting(ApiBuilder.RateLimit.Policies.Fixed);
+  .RequireAuthorization(Constants.Auth.Policies.McpSubscription)
+  .RequireRateLimiting(Constants.RateLimit.Policies.Fixed);
 
 app.Run();

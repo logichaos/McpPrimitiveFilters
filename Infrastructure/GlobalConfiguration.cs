@@ -9,9 +9,15 @@ internal static class GlobalConfigurations
   public static SettingsModel? ApiSettings { get; set; }
 }
 
-public class SettingsModel
+internal class SettingsModel
 {
   public required TokenValidationParameters TokenValidation { get; set; }
   public required FixedWindowRateLimiterOptions FixedWindowRateLimit { get; set; }
   public required HybridCacheEntryOptions Cache { get; set; }
+  public ToolExposureSettings? ToolExposure { get; set; }
+}
+
+internal class ToolExposureSettings
+{
+  public IList<string>? BlockedTools { get; set; }
 }
