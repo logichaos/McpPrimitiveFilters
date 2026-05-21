@@ -1,14 +1,40 @@
-﻿using Microsoft.AspNetCore.Mvc.Testing;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using TUnit.AspNetCore;
 using TUnit.Core.Interfaces;
 
 namespace AuthenticatedHttpMcpServer.Tests;
 
-public class WebApplicationFactory : WebApplicationFactory<Program>, IAsyncInitializer
+public class TestWebApplicationFactory : TestWebApplicationFactory<Program>, IAsyncInitializer
 {
     public Task InitializeAsync()
     {
         _ = Server;
-
         return Task.CompletedTask;
+    }
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        base.ConfigureWebHost(builder);
+        builder.UseEnvironment("Development");
+        builder.ConfigureTestServices(services =>
+        {
+            // AuthenticationOptions throws on duplicate scheme names, so clear existing
+            // registrations before adding the test handler under the same "Bearer" scheme.
+            // This keeps the MrAwesome policy resolving correctly without touching auth config.
+            var existing = services
+                .Where(d => d.ServiceType == typeof(IConfigureOptions<AuthenticationOptions>))
+                .ToList();
+            foreach (var descriptor in existing)
+                services.Remove(descriptor);
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddScheme<TestAuthHandlerOptions, TestAuthHandler>(
+                    JwtBearerDefaults.AuthenticationScheme, _ => { });
+        });
     }
 }
