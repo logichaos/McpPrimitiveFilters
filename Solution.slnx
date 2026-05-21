@@ -3,6 +3,7 @@
     <Project Path="src/AuthenticatedHttpMcpServer/AuthenticatedHttpMcpServer.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/AuthenticatedHttpMcpServer.Tests/AuthenticatedHttpMcpServer.Tests.csproj" />
+    <Project Path="tests/AuthenticatedHttpMcpServer.Unit.Tests/AuthenticatedHttpMcpServer.Unit.Tests.csproj" />
+    <Project Path="tests/AuthenticatedHttpMcpServer.Integration.Tests/AuthenticatedHttpMcpServer.Integration.Tests.csproj" />
   </Folder>
 </Solution>

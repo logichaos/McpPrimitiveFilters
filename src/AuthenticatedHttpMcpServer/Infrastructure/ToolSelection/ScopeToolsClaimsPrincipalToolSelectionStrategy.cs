@@ -5,12 +5,12 @@ namespace AuthenticatedHttpMcpServer.Infrastructure.ToolSelection;
 
 public class ScopeToolsClaimsPrincipalToolSelectionStrategy : HttpContextToolSelectionStrategy
 {
-  private const string SCOPE = "scope";
-  private const string TOOLPREFIX = "tool:";
+  private const string Scope = "scope";
+  private const string ToolPrefix = "tool:";
   public IEnumerable<McpServerTool> FilterToolsWithStrategy(IReadOnlyCollection<McpServerTool> tools, HttpContext ctx)
   {
     ClaimsPrincipal userPrincipal = ctx.User;
-    if (userPrincipal.HasClaim(SCOPE, $"{TOOLPREFIX}all"))
+    if (userPrincipal.HasClaim(Scope, $"{ToolPrefix}all"))
     {
       foreach (McpServerTool tool in tools)
       {
@@ -22,7 +22,7 @@ public class ScopeToolsClaimsPrincipalToolSelectionStrategy : HttpContextToolSel
 
     foreach (McpServerTool tool in tools)
     {
-      if (userPrincipal.HasClaim(SCOPE, $"{TOOLPREFIX}{tool.ProtocolTool.Name}"))
+      if (userPrincipal.HasClaim(Scope, $"{ToolPrefix}{tool.ProtocolTool.Name}"))
       {
         yield return tool;
       }

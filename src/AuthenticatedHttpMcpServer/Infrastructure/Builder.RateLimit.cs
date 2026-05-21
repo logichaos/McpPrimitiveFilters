@@ -1,6 +1,7 @@
 using System.Net;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AuthenticatedHttpMcpServer.Infrastructure;
 
@@ -21,7 +22,8 @@ public static partial class ApiBuilder
           ?? httpContext.Request.Headers[Constants.Auth.AzureApiKeyName].ToString(),
           _ => GlobalConfigurations.ApiSettings.FixedWindowRateLimit
         );
-      }).OnRejected = async (context, cancellationToken) =>
+      });
+      options.OnRejected = async (context, cancellationToken) =>
       {
         if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter))
         {

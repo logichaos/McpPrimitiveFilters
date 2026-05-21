@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace AuthenticatedHttpMcpServer.Tests;
+namespace AuthenticatedHttpMcpServer.Integration.Tests;
 
 public class TestAuthHandlerOptions : AuthenticationSchemeOptions
 {

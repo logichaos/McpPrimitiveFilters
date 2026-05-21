@@ -6,6 +6,12 @@ internal static partial class Constants
   {
     public const string AzureApiKeyName = "Ocp-Apim-Subscription-Key";
 
+    public static class Schemes
+    {
+      public const string Bearer = "Bearer";
+      public const string ApiKey = "ApiKey-Header";
+    }
+
     public static class Policies
     {
       public const string MrAwesome = "mrawesome";

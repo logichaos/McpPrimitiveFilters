@@ -1,7 +1,6 @@
-using System.Security.Claims;
-using AspNetCore.Authentication.ApiKey;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.JsonWebTokens;
+using AuthenticatedHttpMcpServer.Infrastructure.Authentication;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace AuthenticatedHttpMcpServer.Infrastructure;
 
@@ -9,91 +8,42 @@ public static partial class ApiBuilder
 {
   public static IServiceCollection AddAuthServices(this IServiceCollection services, IHostEnvironment environment)
   {
-    ApiKeyEvents apiKeyEvents = new()
+    IConfigurationManager<OpenIdConnectConfiguration>? oidcConfigManager = null;
+    if (!environment.IsDevelopment())
     {
-      OnValidateKey = context =>
-      {
-        if (context.ApiKey == "Lifetime Subscription")
-        {
-          context.ValidationSucceeded();
-        }
-        else
-        {
-          context.ValidationFailed();
-        }
+      var tenantId = GlobalConfigurations.ApiSettings?.EntraId?.TenantId ?? "entraid";
+      var authority = $"https://login.microsoftonline.com/{tenantId}/v2.0";
+      oidcConfigManager = new ConfigurationManager<OpenIdConnectConfiguration>(
+        $"{authority}/.well-known/openid-configuration",
+        new OpenIdConnectConfigurationRetriever());
+    }
 
-        return Task.CompletedTask;
-      }
-    };
-
-    _ = services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-      .AddApiKeyInHeader($"{ApiKeyDefaults.AuthenticationScheme}-Header", options =>
-      {
-        options.KeyName = Constants.Auth.AzureApiKeyName;
-        options.Realm = "API";
-        options.Events = apiKeyEvents;
-      })
-      .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-      {
-        options.TokenValidationParameters.ValidAudiences =
-          GlobalConfigurations.ApiSettings?.TokenValidation.ValidAudiences;
-        options.TokenValidationParameters.ValidIssuers = GlobalConfigurations.ApiSettings?.TokenValidation.ValidIssuers;
-        if (environment.IsDevelopment())
+    services.AddAuthentication(Constants.Auth.Schemes.Bearer)
+      .AddScheme<JwtBearerAuthHandlerOptions, JwtBearerAuthHandler>(
+        Constants.Auth.Schemes.Bearer, opts =>
         {
-          options.TokenValidationParameters.RequireSignedTokens = false;
-          options.TokenValidationParameters.ValidateIssuerSigningKey = false;
-          options.TokenValidationParameters.SignatureValidator =
-            (token, _) => new JsonWebToken(token);
-        }
-        else
+          opts.ValidAudiences = GlobalConfigurations.ApiSettings?.TokenValidation.ValidAudiences;
+          opts.ValidIssuers = GlobalConfigurations.ApiSettings?.TokenValidation.ValidIssuers;
+          opts.RequireSignedTokens = !environment.IsDevelopment();
+          opts.OidcConfigurationManager = oidcConfigManager;
+        })
+      .AddScheme<ApiKeyAuthHandlerOptions, ApiKeyAuthHandler>(
+        Constants.Auth.Schemes.ApiKey, opts =>
         {
-          options.Authority =
-            $"https://login.microsoftonline.com/{GlobalConfigurations.ApiSettings?.EntraId?.TenantId ?? "entraid"}/v2.0";
-        }
-
-        options.Events = new JwtBearerEvents
-        {
-          OnMessageReceived = ctx =>
-          {
-            Console.WriteLine("➡️ Incoming Authorization header:");
-            Console.WriteLine(ctx.Request.Headers["Authorization"]);
-            return Task.CompletedTask;
-          },
-          OnAuthenticationFailed = ctx =>
-          {
-            Console.WriteLine("❌ Authentication failed:");
-            Console.WriteLine(ctx.Exception.ToString());
-            return Task.CompletedTask;
-          },
-          OnTokenValidated = ctx =>
-          {
-            Console.WriteLine("✅ Token validated:");
-            Console.WriteLine("Name: " + ctx.Principal?.Identity?.Name);
-
-            if (ctx.Principal?.Claims is { } claims)
-            {
-              foreach (Claim claim in claims)
-              {
-                Console.WriteLine($"Claim: {claim.Type} = {claim.Value}");
-              }
-            }
-
-            return Task.CompletedTask;
-          }
-        };
-      });
+          opts.ValidateKey = key => key == "Lifetime Subscription";
+        });
 
     services.AddAuthorizationBuilder()
       .AddPolicy(Constants.Auth.Policies.MrAwesome, policy =>
       {
         policy.RequireAuthenticatedUser();
-        policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
+        policy.AuthenticationSchemes.Add(Constants.Auth.Schemes.Bearer);
         policy.RequireRole(Constants.Auth.Roles.McpCaller, Constants.Auth.Roles.Awesome);
       })
       .AddPolicy(Constants.Auth.Policies.McpSubscription, policy =>
       {
         policy.RequireAuthenticatedUser();
-        policy.AuthenticationSchemes.Add($"{ApiKeyDefaults.AuthenticationScheme}-Header");
+        policy.AuthenticationSchemes.Add(Constants.Auth.Schemes.ApiKey);
       });
 
     return services;

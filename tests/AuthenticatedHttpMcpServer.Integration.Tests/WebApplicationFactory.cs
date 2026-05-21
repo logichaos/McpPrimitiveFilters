@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 using TUnit.AspNetCore;
 using TUnit.Core.Interfaces;
 
-namespace AuthenticatedHttpMcpServer.Tests;
+namespace AuthenticatedHttpMcpServer.Integration.Tests;
 
 public class TestWebApplicationFactory : TestWebApplicationFactory<Program>, IAsyncInitializer
 {
