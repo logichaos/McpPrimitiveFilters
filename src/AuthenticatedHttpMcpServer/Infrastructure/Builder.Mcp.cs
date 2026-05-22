@@ -14,6 +14,7 @@ public static partial class ApiBuilder
     services
       .AddMcpServer()
       .AddAuthorizationFilters()
+      .WithToolsFromAssembly(typeof(ApiBuilder).Assembly)
       .WithHttpTransport(opts =>
       {
         opts.Stateless = false;

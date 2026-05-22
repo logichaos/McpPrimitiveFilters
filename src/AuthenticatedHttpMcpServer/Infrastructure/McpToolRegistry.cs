@@ -1,44 +1,14 @@
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using AuthenticatedHttpMcpServer.Infrastructure.ToolSelection;
 using ModelContextProtocol.Server;
 
 namespace AuthenticatedHttpMcpServer.Infrastructure;
 
-public sealed class McpToolRegistry(IServiceProvider services)
+public sealed class McpToolRegistry(IEnumerable<McpServerTool> tools)
 {
-  private IReadOnlyCollection<McpServerTool> GetToolsFromClass<
-    [DynamicallyAccessedMembers(
-      DynamicallyAccessedMemberTypes.PublicMethods)]
-    T>()
-  {
-    List<McpServerTool> allTools = new();
-    Type toolType = typeof(T);
-    T target = ActivatorUtilities.CreateInstance<T>(services);
-
-    foreach (MethodInfo method in toolType.GetMethods()
-               .Where(m => m.GetCustomAttributes<McpServerToolAttribute>().Any()))
-    {
-      try
-      {
-        McpServerTool mcpServerTool = McpServerTool.Create(method, target, new McpServerToolCreateOptions());
-        allTools.Add(mcpServerTool);
-      }
-      catch (Exception ex)
-      {
-        Console.WriteLine($"Failed to add tool {toolType.Name}.{method.Name}: {ex.Message}");
-      }
-    }
-
-    return allTools.AsReadOnly();
-  }
-
   public IEnumerable<McpServerTool> FilterToolsUsingStrategy(IEnumerable<ToolSelectionStrategy> strategies)
   {
-    IReadOnlyCollection<McpServerTool> demoTools = GetToolsFromClass<DemoTools>();
-
-    IEnumerable<McpServerTool> finalSelection = [..demoTools];
-    foreach(var strategy in strategies)
+    IEnumerable<McpServerTool> finalSelection = tools;
+    foreach (var strategy in strategies)
       finalSelection = strategy.FilterTools(finalSelection);
     return finalSelection;
   }

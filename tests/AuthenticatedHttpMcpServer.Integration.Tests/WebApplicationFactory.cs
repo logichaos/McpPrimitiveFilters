@@ -1,5 +1,6 @@
 using AuthenticatedHttpMcpServer.Infrastructure.ToolSelection;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -22,6 +23,11 @@ public class TestWebApplicationFactory : TestWebApplicationFactory<Program>, IAs
     {
         base.ConfigureWebHost(builder);
         builder.UseEnvironment("Development");
+        builder.ConfigureAppConfiguration(config =>
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ToolsSelection:AllowedTools:0"] = "random_number"
+            }));
         builder.ConfigureTestServices(services =>
         {
             // AuthenticationOptions throws on duplicate scheme names, so clear existing

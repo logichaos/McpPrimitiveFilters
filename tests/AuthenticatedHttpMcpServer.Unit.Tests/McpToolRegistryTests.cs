@@ -13,8 +13,11 @@ public class McpToolRegistryTests
     private static McpToolRegistry CreateRegistry()
     {
         var services = new ServiceCollection();
+        services.AddLogging();
         services.AddHttpContextAccessor();
-        return new McpToolRegistry(services.BuildServiceProvider());
+        services.AddOptions();
+        services.AddMcpServer().WithToolsFromAssembly(typeof(DemoTools).Assembly);
+        return new McpToolRegistry(services.BuildServiceProvider().GetServices<McpServerTool>());
     }
 
     [Test]

@@ -7,7 +7,7 @@ public class ToolsOptionsToolSelectionStrategy(IOptionsMonitor<ToolsSelectionOpt
 {
   public IEnumerable<McpServerTool> FilterTools(IEnumerable<McpServerTool> tools)
   {
-    if (toolsSelectionOptions.CurrentValue.AllowedTools is null or { Length: 0})
+    if (toolsSelectionOptions.CurrentValue.AllowedTools is null)
       return tools;
     return tools.Where(tool => toolsSelectionOptions.CurrentValue.AllowedTools.Contains(tool.ProtocolTool.Name));
   }
