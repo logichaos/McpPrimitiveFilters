@@ -35,6 +35,18 @@ internal class JwtBearerAuthHandler(
 
         var token = header["Bearer ".Length..].Trim();
 
+        // Enforce audience validation in signed-token (production) mode.
+        // TokenValidationParameters with null ValidAudiences silently skips
+        // audience validation, so we reject early when not configured.
+        if (Options.RequireSignedTokens
+            && (Options.ValidAudiences is null || !Options.ValidAudiences.Any()))
+        {
+            Logger.LogError("JWT validation is misconfigured: RequireSignedTokens is true " +
+                            "but no ValidAudiences have been set");
+            return AuthenticateResult.Fail(
+                "Server authentication is misconfigured — no valid audiences configured");
+        }
+
         var validationParameters = new TokenValidationParameters
         {
             ValidAudiences = Options.ValidAudiences,
