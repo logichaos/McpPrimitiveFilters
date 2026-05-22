@@ -35,11 +35,11 @@ public class ToolsOptionsToolSelectionStrategyTests
     }
 
     [Test]
-    public async Task AllowedTools_IsEmpty_ReturnsNoTools()
+    public async Task AllowedTools_IsEmpty_ReturnsAllTools()
     {
         var result = CreateSut([]).FilterTools(AllTools);
 
-        await Assert.That(result.Count()).IsEqualTo(0);
+        await Assert.That(result.Count()).IsEqualTo(3);
     }
 
     [Test]

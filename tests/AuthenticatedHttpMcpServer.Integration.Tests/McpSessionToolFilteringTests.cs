@@ -146,10 +146,10 @@ public class McpSessionToolFiltering_EmptyAllowedTools_Tests
     }
 
     [Test]
-    public async Task ConfigureSessionOptions_EmptyAllowedTools_ReturnsNoTools_EvenWithToolAllScope()
+    public async Task ConfigureSessionOptions_EmptyAllowedTools_WithToolAllScope_ReturnsAllTools()
     {
         var tools = await GetToolNames(new Claim("scope", "tool:all"));
 
-        await Assert.That(tools.Count).IsEqualTo(0);
+        await Assert.That(tools.Count).IsEqualTo(2);
     }
 }
