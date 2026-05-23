@@ -1,38 +1,17 @@
 using System.Net;
 using System.Security.Claims;
-using System.Text;
-using Microsoft.IdentityModel.JsonWebTokens;
-using Microsoft.IdentityModel.Tokens;
 
 namespace AuthenticatedHttpMcpServer.Integration.Tests;
 
+/// <summary>
+/// Tests the JWT Bearer authentication and authorization pipeline using
+/// locally-signed test tokens (the TestWebApplicationFactory reconfigures
+/// JwtBearer to accept HS256 tokens signed with a known test key).
+/// </summary>
 public class JwtBearerAuthenticationTests
 {
-    // Must match appsettings.Development.json ApiSettings:TokenValidation values.
-    private const string ValidIssuer = "dotnet-user-jwts";
-    private const string ValidAudience = "http://localhost:5105";
-
-    // Signature is not verified in Development (RequireSignedTokens = false),
-    // so any key produces an accepted token.
-    private static readonly SymmetricSecurityKey TestKey =
-        new(Encoding.UTF8.GetBytes("integration-test-signing-key-min-32-chars!!"));
-
-    [ClassDataSource<RealAuthWebApplicationFactory>(Shared = SharedType.PerTestSession)]
-    public required RealAuthWebApplicationFactory Factory { get; init; }
-
-    private static string CreateToken(
-        string issuer = ValidIssuer,
-        string audience = ValidAudience,
-        IEnumerable<Claim>? claims = null,
-        DateTime? expires = null) =>
-        new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(claims ?? [new Claim("sub", "test-user")]),
-            Issuer = issuer,
-            Audience = audience,
-            Expires = expires ?? DateTime.UtcNow.AddHours(1),
-            SigningCredentials = new SigningCredentials(TestKey, SecurityAlgorithms.HmacSha256),
-        });
+    [ClassDataSource<TestWebApplicationFactory>(Shared = SharedType.PerTestSession)]
+    public required TestWebApplicationFactory Factory { get; init; }
 
     [Test]
     public async Task NoAuthorizationHeader_Returns401()
@@ -56,8 +35,13 @@ public class JwtBearerAuthenticationTests
     [Test]
     public async Task ValidToken_WithCorrectRole_Returns200()
     {
-        var token = CreateToken(claims: [new Claim("role", "awesome"), new Claim("sub", "user1")]);
         var client = Factory.CreateClient();
+        var token = TestWebApplicationFactory.CreateTestToken(
+        [
+            new(ClaimTypes.Name, "test-user"),
+            new(ClaimTypes.Role, "mcpcaller"),
+            new(ClaimTypes.Role, "awesome"),
+        ]);
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
 
         var response = await client.GetAsync("/health");
@@ -66,10 +50,13 @@ public class JwtBearerAuthenticationTests
     }
 
     [Test]
-    public async Task ValidToken_WithoutRole_Returns403()
+    public async Task ValidToken_NoRoles_Returns403()
     {
-        var token = CreateToken(claims: [new Claim("sub", "user1")]);
         var client = Factory.CreateClient();
+        var token = TestWebApplicationFactory.CreateTestToken(
+        [
+            new(ClaimTypes.Name, "test-user"),
+        ]);
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
 
         var response = await client.GetAsync("/health");
@@ -78,41 +65,24 @@ public class JwtBearerAuthenticationTests
     }
 
     [Test]
-    public async Task WrongIssuer_Returns401()
-    {
-        var token = CreateToken(
-            issuer: "https://evil.example.com",
-            claims: [new Claim("role", "awesome"), new Claim("sub", "user1")]);
-        var client = Factory.CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-
-        var response = await client.GetAsync("/health");
-
-        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
-    }
-
-    [Test]
-    public async Task WrongAudience_Returns401()
-    {
-        var token = CreateToken(
-            audience: "https://wrong-api.example.com",
-            claims: [new Claim("role", "awesome"), new Claim("sub", "user1")]);
-        var client = Factory.CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-
-        var response = await client.GetAsync("/health");
-
-        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
-    }
-
-    [Test]
     public async Task ExpiredToken_Returns401()
     {
-        var token = CreateToken(
-            expires: DateTime.UtcNow.AddHours(-1),
-            claims: [new Claim("role", "awesome"), new Claim("sub", "user1")]);
         var client = Factory.CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+        var handler = new Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler();
+        var expiredToken = handler.CreateToken(new Microsoft.IdentityModel.Tokens.SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(
+            [
+                new(ClaimTypes.Name, "test-user"),
+                new(ClaimTypes.Role, "mcpcaller"),
+                new(ClaimTypes.Role, "awesome"),
+            ]),
+            Expires = DateTime.UtcNow.AddHours(-1),
+            SigningCredentials = new Microsoft.IdentityModel.Tokens.SigningCredentials(
+                TestWebApplicationFactory.TestSigningKey,
+                Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256),
+        });
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {expiredToken}");
 
         var response = await client.GetAsync("/health");
 

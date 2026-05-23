@@ -5,6 +5,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/AuthenticatedHttpMcpServer.Unit.Tests/AuthenticatedHttpMcpServer.Unit.Tests.csproj" />
     <Project Path="tests/AuthenticatedHttpMcpServer.Integration.Tests/AuthenticatedHttpMcpServer.Integration.Tests.csproj" />
+    <Project Path="tests/ModelContextProtocol.TestOAuthServer/ModelContextProtocol.TestOAuthServer.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig"/>

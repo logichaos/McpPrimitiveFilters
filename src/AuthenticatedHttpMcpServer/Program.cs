@@ -16,11 +16,12 @@ builder.Services.AddAuthServices(builder.Environment);
 
 WebApplication app = builder.Build();
 
+app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 
 app.MapMcp("/mcp")
-  .RequireAuthorization()
+  .RequireAuthorization(Constants.Auth.Policies.Mcp)
   .RequireRateLimiting(Constants.RateLimit.Policies.Fixed);
 
 app.MapHealthChecks("/health")

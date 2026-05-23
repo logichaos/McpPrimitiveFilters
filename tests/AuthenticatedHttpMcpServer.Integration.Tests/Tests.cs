@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace AuthenticatedHttpMcpServer.Integration.Tests;
 
@@ -15,6 +16,13 @@ public class Tests
     public async Task HealthCheck_ReturnsHealthy()
     {
         var client = TestWebApplicationFactory.CreateClient();
+        var token = TestWebApplicationFactory.CreateTestToken(
+        [
+            new(ClaimTypes.Name, "test-user"),
+            new(ClaimTypes.Role, "mcpcaller"),
+            new(ClaimTypes.Role, "awesome"),
+        ]);
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
 
         var response = await client.GetAsync("/health");
 
@@ -25,14 +33,24 @@ public class Tests
     [Test]
     public async Task HealthCheck_WrongRole_ReturnsForbidden()
     {
-        await using var factory = TestWebApplicationFactory.WithWebHostBuilder(b =>
-            b.ConfigureTestServices(services =>
-                services.PostConfigure<TestAuthHandlerOptions>(
-                    JwtBearerDefaults.AuthenticationScheme,
-                    opts => opts.Claims = [new Claim(ClaimTypes.Role, "wrong-role")])));
+        var client = TestWebApplicationFactory.CreateClient();
+        var token = TestWebApplicationFactory.CreateTestToken(
+        [
+            new(ClaimTypes.Name, "test-user"),
+            new(ClaimTypes.Role, "wrong-role"),
+        ]);
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
 
-        var response = await factory.CreateClient().GetAsync("/health");
+        var response = await client.GetAsync("/health");
 
         await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Forbidden);
+    }
+
+    [Test]
+    public async Task HealthCheck_NoToken_ReturnsUnauthorized()
+    {
+        var response = await TestWebApplicationFactory.CreateClient().GetAsync("/health");
+
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
     }
 }

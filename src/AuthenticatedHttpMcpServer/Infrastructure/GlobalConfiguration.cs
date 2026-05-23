@@ -1,7 +1,6 @@
 using System.Threading.RateLimiting;
 using AuthenticatedHttpMcpServer.Infrastructure.ToolSelection;
 using Microsoft.Extensions.Caching.Hybrid;
-using Microsoft.IdentityModel.Tokens;
 
 namespace AuthenticatedHttpMcpServer.Infrastructure;
 
@@ -12,13 +11,21 @@ internal static class GlobalConfigurations
 
 internal class SettingsModel
 {
-  public required TokenValidationParameters TokenValidation { get; init; }
   public required FixedWindowRateLimiterOptions FixedWindowRateLimit { get; init; }
   public required HybridCacheEntryOptions Cache { get; init; }
   public ToolExposureSettings? ToolExposure { get; init; }
   public string? ApiKey { get; init; }
   public EntraIdOptions? EntraId { get; set; }
   public ToolsSelectionOptions? ToolsSelection { get; set; }
+  public OAuthOptions? OAuth { get; set; }
+}
+
+internal class OAuthOptions
+{
+  public string? Authority { get; set; }
+  public string? ClientId { get; set; }
+  public string[]? ValidAudiences { get; set; }
+  public string[]? ValidIssuers { get; set; }
 }
 
 internal class ToolExposureSettings

@@ -14,6 +14,7 @@ internal static partial class Constants
 
     public static class Policies
     {
+      public const string Mcp = "MCP";
       public const string MrAwesome = "mrawesome";
       public const string McpSubscription = "mcp_subscription";
     }
