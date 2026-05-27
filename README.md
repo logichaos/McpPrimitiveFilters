@@ -32,6 +32,6 @@
 
 ## About the License
 
-- Since it's my first time making a public repo, I was unsure what license to use. I wanted something that is open for people to use, but was thinking that it might be nice to have changes flow back into the repo, in order to help everyone.
-- After a bit of research, it was suggested to me, that a GPLv3 license is exactly that, so that's what I chose.
+- Since it's my first time making a public repo, I am unsure what license to use. I wanted something that is open for people to use, but was thinking that it might be nice to have changes flow back into the repo, in order to help everyone.
+- After a bit of research, it was suggested to me, that a MPL-2.0 would do exactly that, so I went with it.
 - If you have any input on this, I would be very happy to hear it. I'm a total newbie here.
