@@ -1,6 +1,6 @@
 using TUnit.Core.Interfaces;
 
-namespace McpServer.Unit.Tests;
+namespace McpServerSDK.Unit.Tests;
 
 public class InMemoryDb : IAsyncInitializer, IAsyncDisposable
 {

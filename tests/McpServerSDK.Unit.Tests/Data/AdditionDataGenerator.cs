@@ -1,4 +1,4 @@
-namespace McpServer.Unit.Tests;
+namespace McpServerSDK.Unit.Tests;
 
 public class AdditionDataGeneratorAttribute : DataSourceGeneratorAttribute<int, int, int>
 {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Testing;
 using TUnit.Core.Interfaces;
 
-namespace McpServer.Integration.Tests;
+namespace McpServerSDK.Integration.Tests;
 
 public class WebApplicationFactory : WebApplicationFactory<Program>, IAsyncInitializer
 {

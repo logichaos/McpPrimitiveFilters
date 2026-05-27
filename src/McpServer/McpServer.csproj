@@ -12,7 +12,7 @@
     <PackageType>McpServer</PackageType>
 
     <!-- Set up the MCP server to be a self-contained application that does not rely on a shared framework -->
-    <!--<SelfContained>true</SelfContained>-->
+    <!--SelfContained>true</SelfContained>-->
     <PublishSelfContained>true</PublishSelfContained>
 
     <!-- Set up the MCP server to be a single file executable -->
@@ -23,20 +23,17 @@
     <InvariantGlobalization>true</InvariantGlobalization>
 
     <!-- Set recommended package metadata -->
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!--<PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageId>SampleMcpServer</PackageId>
     <PackageVersion>0.1.0-beta</PackageVersion>
     <PackageTags>AI; MCP; server; stdio</PackageTags>
-    <Description>An MCP server using the MCP C# SDK.</Description>
+    <Description>An MCP server using the MCP C# SDK.</Description>-->
   </PropertyGroup>
 
   <!-- Include additional files for browsing the MCP server. -->
   <ItemGroup>
     <None Include=".mcp\server.json" Pack="true" PackagePath="/.mcp/" />
     <None Include="README.md" Pack="true" PackagePath="/" />
-  </ItemGroup>
-
-  <ItemGroup>
   </ItemGroup>
 
   <ItemGroup>

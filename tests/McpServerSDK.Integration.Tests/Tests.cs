@@ -1,4 +1,4 @@
-﻿namespace McpServer.Integration.Tests;
+﻿namespace McpServerSDK.Integration.Tests;
 
 public class Tests
 {
