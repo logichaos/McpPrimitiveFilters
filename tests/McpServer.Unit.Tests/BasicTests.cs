@@ -1,4 +1,4 @@
-namespace McpServerSDK.Unit.Tests;
+namespace McpServer.Unit.Tests;
 
 public class BasicTests
 {
