@@ -1,7 +1,6 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/McpServer/McpServer.csproj" />
-    <Project Path="src/McpServerSDK/McpServerSDK.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/McpServer.Integration.Tests/McpServer.Integration.Tests.csproj" />

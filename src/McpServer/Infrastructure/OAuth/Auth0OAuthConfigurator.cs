@@ -4,9 +4,6 @@ using System.Security.Claims;
 
 namespace McpServer.Infrastructure.OAuth;
 
-/// <summary>
-/// Configures JWT Bearer for Auth0.
-/// </summary>
 public sealed class Auth0OAuthConfigurator : IOAuthSchemeConfigurator
 {
     public const string ProviderTypeName = "Auth0";
@@ -45,7 +42,8 @@ public sealed class Auth0OAuthConfigurator : IOAuthSchemeConfigurator
             ValidAudience = audience,
             ValidIssuer = authority,
             NameClaimType = "name",
-            RoleClaimType = "https://schemas.example.com/roles" // Auth0 uses custom claim URIs
+            // Auth0 uses custom claim URIs rather than the standard "roles"
+            RoleClaimType = "https://schemas.example.com/roles"
         };
 
         options.Events = new JwtBearerEvents

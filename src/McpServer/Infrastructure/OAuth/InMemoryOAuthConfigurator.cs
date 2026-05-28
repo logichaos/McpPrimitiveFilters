@@ -4,9 +4,6 @@ using System.Security.Claims;
 
 namespace McpServer.Infrastructure.OAuth;
 
-/// <summary>
-/// Configures JWT Bearer for a local, in-memory OAuth server (development only).
-/// </summary>
 public sealed class InMemoryOAuthConfigurator : IOAuthSchemeConfigurator
 {
     public const string ProviderTypeName = "InMemory";

@@ -16,16 +16,17 @@
 
 ## What is inside
 
-- A copy of the TestOAuthServer from the csharp-sdk tests, with modifications to show how to control what tools are accessible using scope claims returned by the server.
+- (WIP) A copy of the TestOAuthServer from the csharp-sdk tests, with modifications to show how to control what tools are accessible using scope claims returned by the server.
 - An Http MCP server which can inject different strategies to filter the exposed tools
-- An example strategy which uses appsettings to control which tools are exposed by the server. (ex. giving someone who runs it locally a direct way to control which tools to show)
-- An example strategy using JWT bearer scope claims to filter the tools using the supplied scope claims by the OAuth server. (ex. giving someone in an enterprise setting a way of controlling which tools someone can access)
+- (WIP) An example strategy which uses appsettings to control which tools are exposed by the server. (ex. giving someone who runs it locally a direct way to control which tools to show)
+- (WIP) An example strategy using JWT bearer scope claims to filter the tools using the supplied scope claims by the OAuth server. (ex. giving someone in an enterprise setting a way of controlling which tools someone can access)
 
 ## Disclaimer
 
 - This is a repo for me to learn more about the sdk, as well as the capabilities of MCP, I try hard to make it "production ready", so if you think something is missing, don't hesitate to create an issue.
 - I can't promise to have time for all feedback, but, as long as I do, I will ;-)
-- I have used agents to create some of the code, where I didn't think it will add to my learning curve. Whenever possible, I prefer to write code myself.
+- I used AI assisted code generation for the project. The way I use it is more of a "learner". If I get stuck on something, I brainstorm with the agent and I have a solution proposed/implemented, then I go through all generated code and try to understand how it works/propose changes, according to my engineering skills. Once I have a good grasp of what needs to be done, I scratch everything and start anew, with the learnings I have made from the previous run, along with unit and integration tests.
+- I have created this code from scratch many times, and only when I reach a point that I am satisfied with, will I have a snapshot upon which I will do the whole rinse-and-repeat cycle all over again.
 - This is my first public repo with code that I created. It's scary, but I would be very happy if anyone can use what I learned here to make their lives easier.
 - Along with learning about MCP, I have decided to try and use [JJ vcs](https://www.jj-vcs.dev/latest/) for version control.
   - If you don't know anything about JJ, I encourage you to have alook, as it has proven to be really powerful and fun to use. This coming from someone who has been a hardcore git fan, using the awesome [LazyGit client](https://github.com/jesseduffield/lazygit). LazyGit is, for me, the best git client I have every seen. It has upped my git game in so many ways and I'm forever grateful for Jesse for this amazing tool.

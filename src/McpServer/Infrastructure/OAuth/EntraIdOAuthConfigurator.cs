@@ -4,9 +4,6 @@ using System.Security.Claims;
 
 namespace McpServer.Infrastructure.OAuth;
 
-/// <summary>
-/// Configures JWT Bearer for Microsoft Entra ID (formerly Azure AD).
-/// </summary>
 public sealed class EntraIdOAuthConfigurator : IOAuthSchemeConfigurator
 {
     public const string ProviderTypeName = "EntraId";
