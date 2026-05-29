@@ -163,14 +163,14 @@ public class RateLimiterTests
     }
 
     [Test]
-    public async Task WriteRejectionResponse_UsesMinutesAndSeconds_WhenOver60Seconds()
+    public async Task WriteRejectionResponse_ShowsExactSeconds_Always()
     {
         var context = new DefaultHttpContext();
         var bodyStream = new MemoryStream();
         context.Response.Body = bodyStream;
-        var retryAfter = TimeSpan.FromSeconds(125);
+        var remaining = TimeSpan.FromSeconds(125);
 
-        await ApiBuilder.WriteRejectionResponse(context.Response, retryAfter, CancellationToken.None);
+        await ApiBuilder.WriteRejectionResponse(context.Response, remaining, CancellationToken.None);
 
         bodyStream.Position = 0;
         using var reader = new StreamReader(bodyStream);
@@ -178,19 +178,19 @@ public class RateLimiterTests
 
         await Assert.That(body)
             .Contains("Rate limit reached")
-            .And.Contains("2m 5s");
+            .And.Contains("125s");
     }
 
     [Test]
-    public async Task WriteRejectionResponse_RoundsUpToWholeSeconds()
+    public async Task WriteRejectionResponse_FloorsToWholeSeconds()
     {
         var context = new DefaultHttpContext();
-        var retryAfter = TimeSpan.FromMilliseconds(59001); // 59.001s -> should round to 60
+        var remaining = TimeSpan.FromMilliseconds(59001); // 59.001s -> floors to 59
 
-        await ApiBuilder.WriteRejectionResponse(context.Response, retryAfter, CancellationToken.None);
+        await ApiBuilder.WriteRejectionResponse(context.Response, remaining, CancellationToken.None);
 
         await Assert.That(context.Response.Headers.RetryAfter.ToString())
-            .IsEqualTo("60");
+            .IsEqualTo("59");
     }
 
     // ──────────────────────────────────────────────────────────
