@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
@@ -25,6 +26,14 @@ public static partial class ApiBuilder
 {
   internal sealed class RateLimiterMarker;
 
+  /// <summary>
+  /// Tracks the time of the first rate-limit rejection per partition key
+  /// so we can calculate the actual remaining time in the current window.
+  /// .NET's FixedWindowRateLimiter always returns the full window duration
+  /// as RetryAfter (https://github.com/dotnet/runtime/issues/92557).
+  /// </summary>
+  private static readonly ConcurrentDictionary<string, DateTimeOffset> s_firstRejections = new();
+
   public static bool IsRateLimiterConfigured(this IServiceProvider services) =>
       services.GetService<RateLimiterMarker>() is not null;
 
@@ -49,6 +58,9 @@ public static partial class ApiBuilder
     var mcpRateLimit = rateLimits.McpWindowRateLimit
       ?? throw new InvalidOperationException(
         $"{RateLimiterOptions.RateLimitOptionsSectionName}:McpWindowRateLimit is required.");
+
+    // Register rate limit options so the rejection handler can access window durations
+    services.AddSingleton(rateLimits);
 
     services.AddRateLimiter(options =>
     {
@@ -83,25 +95,49 @@ public static partial class ApiBuilder
   {
     return async (context, cancellationToken) =>
     {
-      if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter))
+      // Determine which policy was hit and get its window duration
+      var rateLimits = context.HttpContext.RequestServices.GetRequiredService<RateLimiterOptions>();
+      var window = context.HttpContext.GetEndpoint()?.Metadata
+          .GetMetadata<EnableRateLimitingAttribute>()?.PolicyName switch
       {
-        await WriteRejectionResponse(context.HttpContext.Response, retryAfter, cancellationToken);
+        RateLimiterPolicyNames.McpRateLimits => rateLimits.McpWindowRateLimit?.Window,
+        RateLimiterPolicyNames.Fixed => rateLimits.FixedWindowRateLimit?.Window,
+        _ => null
+      } ?? TimeSpan.FromMinutes(1);
+
+      var partitionKey = GetPartitionKey(context.HttpContext);
+      var now = DateTimeOffset.UtcNow;
+
+      // Track the first rejection in this window so we can show a
+      // decreasing countdown instead of the static full-window value
+      // that .NET's FixedWindowRateLimiter incorrectly reports.
+      var firstReject = s_firstRejections.GetOrAdd(partitionKey, now);
+      var elapsed = now - firstReject;
+
+      if (elapsed > window)
+      {
+        // We're in a new window — reset the tracker
+        firstReject = now;
+        s_firstRejections[partitionKey] = now;
+        elapsed = TimeSpan.Zero;
       }
+
+      var remaining = window - elapsed;
+      if (remaining < TimeSpan.Zero)
+        remaining = TimeSpan.Zero;
+
+      await WriteRejectionResponse(context.HttpContext.Response, remaining, cancellationToken);
     };
   }
 
-  internal static async Task WriteRejectionResponse(HttpResponse response, TimeSpan retryAfter, CancellationToken cancellationToken)
+  internal static async Task WriteRejectionResponse(HttpResponse response, TimeSpan remaining, CancellationToken cancellationToken)
   {
-    var totalSeconds = (int)Math.Ceiling(retryAfter.TotalSeconds);
+    var totalSeconds = (int)Math.Floor(remaining.TotalSeconds);
     response.Headers.RetryAfter = totalSeconds.ToString();
     response.ContentType = "text/plain";
 
-    var timeLeft = totalSeconds >= 60
-      ? $"{totalSeconds / 60}m {totalSeconds % 60}s"
-      : $"{totalSeconds}s";
-
     await response.WriteAsync(
-      $"Rate limit reached. Retry after {timeLeft}.", cancellationToken);
+      $"Rate limit reached. Retry after {totalSeconds}s.", cancellationToken);
   }
 
   internal static RateLimitPartition<string> CreateFixedWindowPartition(
