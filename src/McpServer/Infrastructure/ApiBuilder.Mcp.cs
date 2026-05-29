@@ -1,5 +1,7 @@
+using McpServer.Infrastructure.ToolFiltering;
 using McpServer.Tools;
 using Microsoft.Net.Http.Headers;
+using ModelContextProtocol.Protocol;
 
 namespace McpServer.Infrastructure;
 public static partial class ApiBuilder
@@ -9,10 +11,64 @@ public static partial class ApiBuilder
     services
       .AddMcpServer()
       .WithHttpTransport(opts => opts.Stateless = true)
-      .WithTools<RandomNumberTools>();
+      .WithTools<RandomNumberTools>()
+      .WithRequestFilters(filters =>
+      {
+        filters.AddListToolsFilter(next => async (context, cancellationToken) =>
+        {
+          var result = await next(context, cancellationToken);
 
-    // If OAuth is not already configured (no OAuthMarker registered),
-    // add a basic CORS policy for browser-based MCP clients.
+          if (result.Tools is { Count: > 0 })
+          {
+            var httpContextAccessor = context.Services?.GetService<IHttpContextAccessor>();
+            var strategies = context.Services?.GetServices<ToolFilteringStrategy>();
+
+            if (httpContextAccessor?.HttpContext is { } httpContext && strategies is not null)
+            {
+              var toolNames = result.Tools.Select(t => t.Name).ToList();
+              foreach (var strategy in strategies)
+              {
+                toolNames = strategy.FilterTools(httpContext, toolNames).ToList();
+              }
+
+              var allowedNames = new HashSet<string>(toolNames, StringComparer.OrdinalIgnoreCase);
+              result.Tools = result.Tools.Where(t => allowedNames.Contains(t.Name)).ToList();
+            }
+          }
+
+          return result;
+        });
+
+        filters.AddCallToolFilter(next => async (context, cancellationToken) =>
+        {
+          var httpContextAccessor = context.Services?.GetService<IHttpContextAccessor>();
+          var strategies = context.Services?.GetServices<ToolFilteringStrategy>();
+
+          if (httpContextAccessor?.HttpContext is { } httpContext
+              && strategies is not null
+              && context.Params is { } requestParams)
+          {
+            var toolName = requestParams.Name;
+            var names = new[] { toolName }.AsEnumerable();
+            foreach (var strategy in strategies)
+            {
+              names = strategy.FilterTools(httpContext, names);
+            }
+
+            if (!names.Any())
+            {
+              return new CallToolResult
+              {
+                Content = [new TextContentBlock { Text = $"Tool '{toolName}' is not authorized." }],
+                IsError = true
+              };
+            }
+          }
+
+          return await next(context, cancellationToken);
+        });
+      });
+
     var oauthConfigured = services.Any(sd => sd.ServiceType == typeof(OAuthMarker));
     if (!oauthConfigured)
     {
@@ -46,8 +102,6 @@ public static partial class ApiBuilder
     }
     else
     {
-      // No OAuth: still need CORS middleware for browser-based
-      // MCP clients (Inspector, Claude Desktop, etc.)
       app.UseCors();
       endpoint.RequireCors(McpCorsPolicyName);
     }
