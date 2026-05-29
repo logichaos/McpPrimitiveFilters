@@ -11,11 +11,11 @@ public sealed class Auth0OAuthConfigurator : IOAuthSchemeConfigurator
 
     public void Configure(JwtBearerOptions options, OAuthSchemeConfig scheme, OAuthOptions oauth)
     {
-        var domain = scheme.Domain
-            ?? throw new InvalidOperationException(
-                $"OAuth scheme '{nameof(Auth0OAuthConfigurator)}' requires Domain.");
+        if (string.IsNullOrEmpty(scheme.Domain))
+            throw new InvalidOperationException(
+                $"OAuth scheme '{nameof(Auth0OAuthConfigurator)}' requires a non-empty Domain.");
 
-        var authority = $"https://{domain.TrimEnd('/')}/";
+        var authority = $"https://{scheme.Domain.TrimEnd('/')}/";
         var audience = scheme.Audience
             ?? scheme.ClientId
             ?? oauth.ServerUrl;
@@ -40,7 +40,6 @@ public sealed class Auth0OAuthConfigurator : IOAuthSchemeConfigurator
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ValidAudience = audience,
-            ValidIssuer = authority,
             NameClaimType = "name",
             // Auth0 uses custom claim URIs rather than the standard "roles"
             RoleClaimType = "https://schemas.example.com/roles"

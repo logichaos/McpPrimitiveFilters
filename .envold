@@ -1,0 +1,54 @@
+# ──────────────────────────────────────────────────────────
+# AuthenticatedHttpMcpServer — .env template
+# ──────────────────────────────────────────────────────────
+# Copy this file to .env and fill in your values.
+# .env is gitignored — never commit real secrets.
+#
+# HOW IT WORKS
+#   Double-underscore (__) maps to colon (:) — the standard
+#   ASP.NET Core hierarchical key convention:
+#
+#     Mcp__OAuth__Schemes__EntraId__TenantId
+#     → Mcp:OAuth:Schemes:EntraId:TenantId
+#
+# PRECEDENCE (highest to lowest)
+#   Command-line args > env vars > .env > appsettings.{Env}.json
+#
+# LAUNCH PROFILES
+#   dotnet run uses the launch profile in Properties/launchSettings.json
+#   by default, which sets ASPNETCORE_ENVIRONMENT=Development and
+#   enables InMemory OAuth. To use Production + your .env settings:
+#
+#     dotnet run --project src/McpServer --launch-profile ""
+#
+# ──────────────────────────────────────────────────────────
+
+Mcp__OAuth__DefaultScheme=EntraId
+Mcp_OAuth_Resource=api://bb82ea1c-3f81-44f7-ab41-08461d1688ab
+# ── Entra ID (Azure AD) ───────────────────────────────────
+# Fill these in first, then set Enabled=true:
+
+Mcp__OAuth__Schemes__EntraId__Enabled=true
+Mcp__OAuth__Schemes__EntraId__TenantId=dacaa1aa-c361-4f9c-aed9-36317ff5e444
+Mcp__OAuth__Schemes__EntraId__ClientId=bb82ea1c-3f81-44f7-ab41-08461d1688ab
+
+# If using EntraId as your only scheme, also set the default
+# and disable the other providers:
+#
+# Mcp__OAuth__DefaultScheme=EntraId
+# Mcp__OAuth__Schemes__InMemory__Enabled=false
+# Mcp__OAuth__Schemes__Auth0__Enabled=false
+
+# Optional overrides:
+# Mcp__OAuth__Schemes__EntraId__Audience=api://your-client-id
+# Mcp__OAuth__Schemes__EntraId__Instance=https://login.microsoftonline.com/
+# Mcp__OAuth__ServerUrl=https://your-mcp-server.example.com
+
+# ── Auth0 ─────────────────────────────────────────────────
+# Mcp__OAuth__Schemes__Auth0__Enabled=true
+# Mcp__OAuth__Schemes__Auth0__Domain=your-tenant.auth0.com
+# Mcp__OAuth__Schemes__Auth0__ClientId=your-auth0-client-id
+
+# ── InMemory (local dev with TestOAuthServer) ─────────────
+# Mcp__OAuth__Schemes__InMemory__Enabled=true
+# Mcp__OAuth__Schemes__InMemory__AuthorityUrl=https://localhost:7029

@@ -11,12 +11,12 @@ public sealed class EntraIdOAuthConfigurator : IOAuthSchemeConfigurator
 
     public void Configure(JwtBearerOptions options, OAuthSchemeConfig scheme, OAuthOptions oauth)
     {
-        var tenantId = scheme.TenantId
-            ?? throw new InvalidOperationException(
-                $"OAuth scheme '{nameof(EntraIdOAuthConfigurator)}' requires TenantId.");
+        if (string.IsNullOrEmpty(scheme.TenantId))
+            throw new InvalidOperationException(
+                $"OAuth scheme '{nameof(EntraIdOAuthConfigurator)}' requires a non-empty TenantId.");
 
         var instance = scheme.Instance ?? "https://login.microsoftonline.com/";
-        var authority = $"{instance.TrimEnd('/')}/{tenantId}/v2.0";
+        var authority = $"{instance.TrimEnd('/')}/{scheme.TenantId}/v2.0";
         var audience = scheme.Audience
             ?? scheme.ClientId
             ?? oauth.ServerUrl;
@@ -34,6 +34,10 @@ public sealed class EntraIdOAuthConfigurator : IOAuthSchemeConfigurator
             };
         }
 
+        // Don't set ValidIssuer explicitly — the JWT bearer middleware auto-discovers
+        // the valid issuer from the OIDC metadata at {authority}/.well-known/openid-configuration.
+        // Entra ID v2.0 tokens may carry an iss that differs from the authority URL
+        // (e.g. https://sts.windows.net/{tenantId}/), so hardcoding it causes rejections.
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -41,7 +45,6 @@ public sealed class EntraIdOAuthConfigurator : IOAuthSchemeConfigurator
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ValidAudience = audience,
-            ValidIssuer = authority,
             NameClaimType = "name",
             RoleClaimType = "roles"
         };
