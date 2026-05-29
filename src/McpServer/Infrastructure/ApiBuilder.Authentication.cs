@@ -116,6 +116,7 @@ public static partial class ApiBuilder
         {
             mcpOptions.ResourceMetadata = new()
             {
+                Resource = oauth.Resource,
                 ResourceDocumentation = oauth.ResourceDocumentation,
                 ScopesSupported = oauth.ScopesSupported ?? [],
             };

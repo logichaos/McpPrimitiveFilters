@@ -8,6 +8,15 @@ public sealed class OAuthOptions
 
     public string ServerUrl { get; set; } = string.Empty;
 
+    /// <summary>
+    /// The canonical resource URI advertised in OAuth metadata.
+    /// This is the value the MCP client sends as the <c>resource</c> parameter
+    /// in the authorization request. For Entra ID, set this to your
+    /// Application ID URI (e.g. <c>api://your-client-id</c>).
+    /// If omitted, the SDK auto-derives it from the request's base URL.
+    /// </summary>
+    public string? Resource { get; set; }
+
     public string[] ScopesSupported { get; set; } = [];
 
     public string? ResourceDocumentation { get; set; }
