@@ -27,12 +27,9 @@ public static partial class ApiBuilder
   internal sealed class RateLimiterMarker;
 
   /// <summary>
-  /// Tracks the time of the first rate-limit rejection per partition key
-  /// so we can calculate the actual remaining time in the current window.
-  /// .NET's FixedWindowRateLimiter always returns the full window duration
-  /// as RetryAfter (https://github.com/dotnet/runtime/issues/92557).
+  /// Dictionary key for resolving the first-rejection tracker from DI.
   /// </summary>
-  private static readonly ConcurrentDictionary<string, DateTimeOffset> s_firstRejections = new();
+  internal const string FirstRejectionsKey = "FirstRejections";
 
   public static bool IsRateLimiterConfigured(this IServiceProvider services) =>
       services.GetService<RateLimiterMarker>() is not null;
@@ -59,8 +56,11 @@ public static partial class ApiBuilder
       ?? throw new InvalidOperationException(
         $"{RateLimiterOptions.RateLimitOptionsSectionName}:McpWindowRateLimit is required.");
 
-    // Register rate limit options so the rejection handler can access window durations
     services.AddSingleton(rateLimits);
+
+    // Register the first-rejection tracker as a singleton so each
+    // WebApplicationFactory instance (and integration test) has its own state.
+    services.AddKeyedSingleton<ConcurrentDictionary<string, DateTimeOffset>>(FirstRejectionsKey);
 
     services.AddRateLimiter(options =>
     {
@@ -95,7 +95,6 @@ public static partial class ApiBuilder
   {
     return async (context, cancellationToken) =>
     {
-      // Determine which policy was hit and get its window duration
       var rateLimits = context.HttpContext.RequestServices.GetRequiredService<RateLimiterOptions>();
       var window = context.HttpContext.GetEndpoint()?.Metadata
           .GetMetadata<EnableRateLimitingAttribute>()?.PolicyName switch
@@ -105,20 +104,21 @@ public static partial class ApiBuilder
         _ => null
       } ?? TimeSpan.FromMinutes(1);
 
+      var firstRejections = context.HttpContext.RequestServices.GetRequiredKeyedService<ConcurrentDictionary<string, DateTimeOffset>>(FirstRejectionsKey);
+
       var partitionKey = GetPartitionKey(context.HttpContext);
       var now = DateTimeOffset.UtcNow;
 
       // Track the first rejection in this window so we can show a
       // decreasing countdown instead of the static full-window value
       // that .NET's FixedWindowRateLimiter incorrectly reports.
-      var firstReject = s_firstRejections.GetOrAdd(partitionKey, now);
+      var firstReject = firstRejections.GetOrAdd(partitionKey, now);
       var elapsed = now - firstReject;
 
       if (elapsed > window)
       {
-        // We're in a new window — reset the tracker
         firstReject = now;
-        s_firstRejections[partitionKey] = now;
+        firstRejections[partitionKey] = now;
         elapsed = TimeSpan.Zero;
       }
 
