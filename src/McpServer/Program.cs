@@ -7,7 +7,8 @@ builder.AddLogging();
 builder.Services
   .AddOAuth(builder.Configuration)
   .ConfigureRateLimiter(builder.Configuration)
-  .AddMcp(builder.Configuration);
+  .AddMcp(builder.Configuration)
+  .AddToolFiltering();
 
 var app = builder.Build();
 
