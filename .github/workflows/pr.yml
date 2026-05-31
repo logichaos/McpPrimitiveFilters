@@ -57,7 +57,7 @@ jobs:
     if: always()
     permissions:
       checks: write
-      pull-requests: read
+      pull-requests: write
 
     steps:
     - name: Download all test results
