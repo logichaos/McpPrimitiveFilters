@@ -2,8 +2,6 @@ using McpServer.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddEnvFile();
-
 builder.AddLogging();
 
 builder.Services
