@@ -2,38 +2,22 @@ namespace McpServer.Unit.Tests;
 
 public class BasicTests
 {
-  [Before(Class)]
-  public static Task BeforeClass(ClassHookContext context)
-  {
-    // Runs once before all tests in this class
-    return Task.CompletedTask;
-  }
+    [Before(Class)]
+    public static Task BeforeClass(ClassHookContext context) => Task.CompletedTask;
 
-  [After(Class)]
-  public static Task AfterClass(ClassHookContext context)
-  {
-    // Runs once after all tests in this class
-    return Task.CompletedTask;
-  }
+    [After(Class)]
+    public static Task AfterClass(ClassHookContext context) => Task.CompletedTask;
 
-  [Before(Test)]
-  public Task BeforeTest(TestContext context)
-  {
-    // Runs before each test in this class
-    return Task.CompletedTask;
-  }
+    [Before(Test)]
+    public Task BeforeTest(TestContext context) => Task.CompletedTask;
 
-  [After(Test)]
-  public Task AfterTest(TestContext context)
-  {
-    // Runs after each test in this class
-    return Task.CompletedTask;
-  }
+    [After(Test)]
+    public Task AfterTest(TestContext context) => Task.CompletedTask;
 
-  [Test]
-  public async Task Add_ReturnsSum()
-  {
-    bool t = true;
-    await Assert.That(t).IsTrue();
-  }
+    [Test]
+    public async Task Add_ReturnsSum()
+    {
+        bool t = true;
+        await Assert.That(t).IsTrue();
+    }
 }

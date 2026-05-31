@@ -1,27 +1,14 @@
 using McpServer.Infrastructure;
 using McpServer.Infrastructure.OAuth;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace McpServer.Unit.Tests.OAuth;
 
-/// <summary>
-/// Tests the <see cref="ApiBuilder.AddOAuth"/> extension method behavior
-/// across various configuration scenarios. Uses in-memory configuration
-/// to avoid file dependencies.
-///
-/// OAuth is considered "configured" when an <see cref="ApiBuilder.OAuthMarker"/>
-/// singleton is present in the DI container.
-/// </summary>
 public class ApiBuilderOAuthTests
 {
-    // ──────────────────────────────────────────────────────────────
-    // OAuth disabled scenarios
-    // ──────────────────────────────────────────────────────────────
-
     [Test]
     public async Task NoConfigSection_NoOAuthMarkerRegistered()
     {
@@ -76,10 +63,6 @@ public class ApiBuilderOAuthTests
 
         await Assert.That(provider.IsOAuthConfigured()).IsFalse();
     }
-
-    // ──────────────────────────────────────────────────────────────
-    // OAuth enabled — single scheme
-    // ──────────────────────────────────────────────────────────────
 
     [Test]
     public async Task SingleSchemeEnabled_OAuthMarkerIsRegistered()
@@ -153,10 +136,6 @@ public class ApiBuilderOAuthTests
         await Assert.That(authzService).IsNotNull();
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // OAuth enabled — EntraId and Auth0 providers
-    // ──────────────────────────────────────────────────────────────
-
     [Test]
     public async Task EntraIdSchemeEnabled_OAuthMarkerIsRegistered()
     {
@@ -182,10 +161,6 @@ public class ApiBuilderOAuthTests
 
         await Assert.That(provider.IsOAuthConfigured()).IsTrue();
     }
-
-    // ──────────────────────────────────────────────────────────────
-    // Multiple schemes — policy scheme
-    // ──────────────────────────────────────────────────────────────
 
     [Test]
     public async Task MultipleSchemesEnabled_UsesPolicyScheme()
@@ -213,10 +188,6 @@ public class ApiBuilderOAuthTests
         await Assert.That(authOptions.Value.DefaultAuthenticateScheme)
             .IsEqualTo("MultiScheme");
     }
-
-    // ──────────────────────────────────────────────────────────────
-    // Validation — invalid config
-    // ──────────────────────────────────────────────────────────────
 
     [Test]
     public async Task MissingDefaultScheme_ThrowsInvalidOperationException()
@@ -282,14 +253,6 @@ public class ApiBuilderOAuthTests
         });
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // Helpers
-    // ──────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Builds an in-memory configuration with a single scheme,
-    /// sufficient for testing AddOAuth behavior.
-    /// </summary>
     private static IConfiguration BuildBaseConfig(string schemeName, bool enabled)
     {
         var data = new Dictionary<string, string?>
@@ -300,19 +263,12 @@ public class ApiBuilderOAuthTests
             [$"Mcp:OAuth:Schemes:{schemeName}:Type"] = schemeName,
         };
 
-        // Add required provider-specific fields
         if (schemeName == "InMemory")
-        {
             data[$"Mcp:OAuth:Schemes:{schemeName}:AuthorityUrl"] = "https://localhost:7029";
-        }
         else if (schemeName == "EntraId")
-        {
             data[$"Mcp:OAuth:Schemes:{schemeName}:TenantId"] = "test-tenant";
-        }
         else if (schemeName == "Auth0")
-        {
             data[$"Mcp:OAuth:Schemes:{schemeName}:Domain"] = "test.auth0.com";
-        }
 
         return new ConfigurationBuilder()
             .AddInMemoryCollection(data)
