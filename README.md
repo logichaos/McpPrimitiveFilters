@@ -16,10 +16,10 @@
 
 ## What is inside
 
-- (WIP) A copy of the TestOAuthServer from the csharp-sdk tests, with modifications to show how to control what tools are accessible using scope claims returned by the server.
+- A copy of the TestOAuthServer from the csharp-sdk tests, with modifications to show how to control what tools are accessible using scope claims returned by the server.
 - An Http MCP server which can inject different strategies to filter the exposed tools
-- (WIP) An example strategy which uses appsettings to control which tools are exposed by the server. (ex. giving someone who runs it locally a direct way to control which tools to show)
-- (WIP) An example strategy using JWT bearer scope claims to filter the tools using the supplied scope claims by the OAuth server. (ex. giving someone in an enterprise setting a way of controlling which tools someone can access)
+- An example strategy which uses appsettings to control which tools are exposed by the server. (ex. giving someone who runs it locally a direct way to control which tools to show)
+- An example strategy using JWT bearer scope claims to filter the tools using the supplied scope claims by the OAuth server. (ex. giving someone in an enterprise setting a way of controlling which tools someone can access)
 
 ## Disclaimer
 
@@ -184,17 +184,17 @@ The client automatically discovers the authorization server metadata and perform
 
 ### Step 6: Call a Tool
 
-Once connected, ask your AI client to "generate a random number between 1 and 50." The client calls the exposed `GetRandomNumber` tool — that's the only tool registered in the server. You can add your own tools by following the same pattern (see `src/McpServer/Tools/RandomNumberTools.cs`).
+Once connected, ask your AI client to "generate a random number between 1 and 50." The client discovers the available tools automatically. The server currently provides five example tools: `GetRandomNumber`, `GetTimestamp`, `Echo`, `ListUsers`, and `GetServerStats`. You can add your own tools by following the same pattern (see `src/McpServer/Tools/RandomNumberTools.cs`).
 
 ### Step 7: Control Which Tools Are Exposed
 
 This is the core idea of the project. The server currently registers tools through `WithTools<T>()` in `ApiBuilder.Mcp.cs`. To control which tools clients can see, you have several strategies:
 
 - **Static filtering in code** — simply add or remove `WithTools<X>()` calls to control the total tool set
-- **Configuration-based filtering** _(WIP)_ — a strategy that reads an allow-list from `appsettings.json`
-- **Scope-based filtering** _(WIP)_ — a strategy that inspects OAuth scope claims (`scp` or `roles`) from the JWT and only exposes tools matching those scopes
+- **Configuration-based filtering** — a strategy that reads an allow-list from `appsettings.json` (`Mcp:AllowedTools` section)
+- **Scope-based filtering** — a strategy that inspects JWT claims of the form `mcp.tool.{tool_name}` and only exposes tools matching those claims
 
-The last strategy is the most powerful for enterprise setups: your identity provider assigns scopes like `mcp:tools:finance` and `mcp:tools:hr`, and the server dynamically hides tools the caller isn't authorized to see.
+The last strategy is the most powerful for enterprise setups: your identity provider assigns claims like `mcp.tool.GetRandomNumber` with value `"true"`, and the server dynamically hides tools the caller isn't authorized to see.
 
 ---
 
@@ -212,7 +212,12 @@ AuthenticatedHttpMcpServer/
 │       │   ├── ApiBuilder.Authentication.cs  # OAuth wiring, scheme configurators
 │       │   ├── ApiBuilder.Maps.cs         # Health-check endpoint
 │       │   ├── ApiBuilder.RateLimiter.cs  # Rate-limiting policies
+│       │   ├── ApiBuilder.ToolFiltering.cs  # Tool filtering strategy registration
 │       │   ├── ApiBuilder.Logging.cs      # Logging setup
+│       │   ├── ToolFiltering/             # Pluggable tool visibility strategies
+│       │   │   ├── ToolFilteringStrategy.cs         # Strategy interface
+│       │   │   ├── AppSettingsToolFilteringStrategy.cs  # Config-based allowlist
+│       │   │   └── OAuthClaimsToolFilteringStrategy.cs  # JWT claims-based filtering
 │       │   └── OAuth/                     # Provider-specific JWT configurators
 │       │       ├── IOAuthSchemeConfigurator.cs
 │       │       ├── OAuthOptions.cs
@@ -280,7 +285,8 @@ flowchart TD
     D --> F["ConfigureRateLimiter(config)"]
     E --> F
     F --> G["AddMcp()"]
-    G --> H["builder.Build()"]
+    G --> G2["AddToolFiltering()"]
+    G2 --> H["builder.Build()"]
     H --> I["UseLogging()"]
     I --> J{"OAuth configured?"}
     J -->|Yes| K["UseOAuth()<br/>CORS + AuthN + AuthZ"]
@@ -477,9 +483,9 @@ When OAuth is enabled, the server automatically exposes `/.well-known/oauth-auth
 
 MCP clients use this endpoint to discover how to authenticate before making tool calls.
 
-### Tool Visibility Strategy (WIP)
+### Tool Visibility Strategy
 
-The project's core value proposition is **controlling which tools a client can see**. While currently all registered tools are exposed, the architecture is designed to support pluggable filtering strategies:
+The project's core value proposition is **controlling which tools a client can see**. Two pluggable filtering strategies are wired into the MCP request pipeline:
 
 ```mermaid
 flowchart LR
@@ -495,8 +501,7 @@ flowchart LR
 
     subgraph Strategies [🧩 Strategies]
         E["📋 Config-Based<br/>Whitelist from appsettings"]
-        F["🎫 Scope-Based<br/>JWT scope claims → tools"]
-        G["🏷️ Role-Based<br/>JWT role claims → tools"]
+        F["🎫 Scope-Based<br/>JWT claims → tools"]
     end
 
     A --> B
@@ -504,16 +509,14 @@ flowchart LR
     C --> D
     D --> A
 
-    C -.-> E
-    C -.-> F
-    C -.-> G
+    C --> E
+    C --> F
 
     style C fill:#e8a838,color:#000
     style D fill:#50b86c,color:#fff
 ```
 
-- **Config-Based**: An admin lists allowed tools in `appsettings.json`. Simple, no identity provider needed.
-- **Scope-Based**: The OAuth server issues scopes like `mcp:tools:read` — the filter only shows tools matching the caller's scopes. This is the enterprise-grade approach.
-- **Role-Based**: Similar to scope-based, but uses role claims (`roles` or custom claim types).
+- **Config-Based**: An admin lists allowed tools in `appsettings.json` under `Mcp:AllowedTools`. Simple, no identity provider needed.
+- **Scope-Based**: The JWT carries claims of the form `mcp.tool.{tool_name}` with value `"true"` — the filter only shows tools matching the caller's claims. This is the enterprise-grade approach.
 
-All strategies implement a common interface and are injected into the MCP server's pipeline, making them swappable without changing the tool code.
+Both strategies implement the `ToolFilteringStrategy` interface and are injected into the MCP server's pipeline, making them swappable without changing the tool code. The `AppSettingsToolFilteringStrategy` is applied first, then `OAuthClaimsToolFilteringStrategy` — a tool must pass both (AND semantics). Additional custom strategies can be registered via `services.AddSingleton<ToolFilteringStrategy, T>()` before building the app.
