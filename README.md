@@ -26,6 +26,7 @@
 - This is a repo for me to learn more about the sdk, as well as the capabilities of MCP, I try hard to make it "production ready", so if you think something is missing, don't hesitate to create an issue.
 - I can't promise to have time for all feedback, but, as long as I do, I will ;-)
 - I used AI assisted code generation for the project. The way I use it is more of a "learner". If I get stuck on something, I brainstorm with the agent and I have a solution proposed/implemented, then I go through all generated code and try to understand how it works/propose changes, according to my engineering skills. Once I have a good grasp of what needs to be done, I scratch everything and start anew, with the learnings I have made from the previous run, along with unit and integration tests.
+- I use openspec for spec driven development. I have found the results produced this way are more consistent than just telling the AI agent to do something out of the blue (for bigger tasks).
 - I have created this code from scratch many times, and only when I reach a point that I am satisfied with, will I have a snapshot upon which I will do the whole rinse-and-repeat cycle all over again.
 - This is my first public repo with code that I created. It's scary, but I would be very happy if anyone can use what I learned here to make their lives easier.
 - Along with learning about MCP, I have decided to try and use [JJ vcs](https://www.jj-vcs.dev/latest/) for version control.
