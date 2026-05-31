@@ -3,16 +3,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace McpServer.Unit.Tests.OAuth;
 
-/// <summary>
-/// Tests that each <see cref="IOAuthSchemeConfigurator"/> correctly
-/// configures <see cref="JwtBearerOptions"/> for its provider type.
-/// </summary>
 public class OAuthConfiguratorTests
 {
-    // ──────────────────────────────────────────────────────────────
-    // InMemoryOAuthConfigurator
-    // ──────────────────────────────────────────────────────────────
-
     [Test]
     public async Task InMemory_SetsAuthorityAndTokenValidation()
     {
@@ -139,10 +131,6 @@ public class OAuthConfiguratorTests
         await Assert.That(options.TokenValidationParameters.RoleClaimType).IsEqualTo("roles");
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // EntraIdOAuthConfigurator
-    // ──────────────────────────────────────────────────────────────
-
     [Test]
     public async Task EntraId_ConstructsAuthority_FromTenantId()
     {
@@ -228,10 +216,6 @@ public class OAuthConfiguratorTests
         });
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // Auth0OAuthConfigurator
-    // ──────────────────────────────────────────────────────────────
-
     [Test]
     public async Task Auth0_ConstructsAuthority_FromDomain()
     {
@@ -313,10 +297,6 @@ public class OAuthConfiguratorTests
             return Task.CompletedTask;
         });
     }
-
-    // ──────────────────────────────────────────────────────────────
-    // ProviderType — each configurator reports its type
-    // ──────────────────────────────────────────────────────────────
 
     [Test]
     public async Task InMemory_ProviderType_IsInMemory()

@@ -11,9 +11,7 @@ public class DemoToolsTests
     {
         var result = _sut.GetTimestamp();
 
-        // Should parse as a valid DateTimeOffset in ISO 8601 round-trip format
         await Assert.That(DateTimeOffset.TryParse(result, out var parsed)).IsTrue();
-        // Should end with Z (UTC indicator) or +00:00
         await Assert.That(result.EndsWith("Z") || result.Contains('+')).IsTrue();
     }
 

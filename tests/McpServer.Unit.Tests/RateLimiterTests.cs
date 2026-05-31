@@ -10,10 +10,6 @@ namespace McpServer.Unit.Tests;
 
 public class RateLimiterTests
 {
-    // ──────────────────────────────────────────────────────────
-    // GetPartitionKey
-    // ──────────────────────────────────────────────────────────
-
     [Test]
     public async Task GetPartitionKey_ReturnsNameIdentifier_WhenClaimPresent()
     {
@@ -32,7 +28,7 @@ public class RateLimiterTests
     {
         var context = new DefaultHttpContext();
         context.Connection.RemoteIpAddress = IPAddress.Parse("10.0.0.1");
-        context.User = new ClaimsPrincipal(); // no claims
+        context.User = new ClaimsPrincipal();
 
         var key = ApiBuilder.GetPartitionKey(context);
 
@@ -63,12 +59,8 @@ public class RateLimiterTests
         await Assert.That(key).IsEqualTo("authenticated-user");
     }
 
-    // ──────────────────────────────────────────────────────────
-    // SetRateLimitHeaders
-    // ──────────────────────────────────────────────────────────
-
     [Test]
-    public async Task SetRateLimitHeaders_SetsPermitLimitHeader_ForFixedPolicy()
+    public async Task SetRateLimitHeaders_SetsPermitLimitHeader()
     {
         var context = new DefaultHttpContext();
         var rateLimit = new FixedWindowRateLimiterOptions
@@ -115,10 +107,6 @@ public class RateLimiterTests
             .IsEqualTo("200");
     }
 
-    // ──────────────────────────────────────────────────────────
-    // WriteRejectionResponse
-    // ──────────────────────────────────────────────────────────
-
     [Test]
     public async Task WriteRejectionResponse_SetsRetryAfterHeader()
     {
@@ -163,7 +151,7 @@ public class RateLimiterTests
     }
 
     [Test]
-    public async Task WriteRejectionResponse_ShowsExactSeconds_Always()
+    public async Task WriteRejectionResponse_ShowsExactSeconds()
     {
         var context = new DefaultHttpContext();
         var bodyStream = new MemoryStream();
@@ -185,17 +173,13 @@ public class RateLimiterTests
     public async Task WriteRejectionResponse_FloorsToWholeSeconds()
     {
         var context = new DefaultHttpContext();
-        var remaining = TimeSpan.FromMilliseconds(59001); // 59.001s -> floors to 59
+        var remaining = TimeSpan.FromMilliseconds(59001);
 
         await ApiBuilder.WriteRejectionResponse(context.Response, remaining, CancellationToken.None);
 
         await Assert.That(context.Response.Headers.RetryAfter.ToString())
             .IsEqualTo("59");
     }
-
-    // ──────────────────────────────────────────────────────────
-    // CreateFixedWindowPartition
-    // ──────────────────────────────────────────────────────────
 
     [Test]
     public async Task CreateFixedWindowPartition_UsesUserPartitionKey()
@@ -235,7 +219,7 @@ public class RateLimiterTests
     }
 
     [Test]
-    public async Task CreateFixedWindowPartition_UsesCorrectPermitLimit_ForDifferentPolicies()
+    public async Task CreateFixedWindowPartition_UsesIpAsFallbackKey()
     {
         var context = new DefaultHttpContext();
         context.Connection.RemoteIpAddress = IPAddress.Parse("10.0.0.2");
@@ -247,13 +231,8 @@ public class RateLimiterTests
 
         var partition = ApiBuilder.CreateFixedWindowPartition(context, mcpLimit);
 
-        // The partition key is the IP, and the factory uses MCP-specific options
         await Assert.That(partition.PartitionKey).IsEqualTo("10.0.0.2");
     }
-
-    // ──────────────────────────────────────────────────────────
-    // Policy registration (integration-style)
-    // ──────────────────────────────────────────────────────────
 
     [Test]
     public async Task ConfigureRateLimiter_RegistersBothPolicies()
@@ -302,10 +281,6 @@ public class RateLimiterTests
             .IsEqualTo((int)HttpStatusCode.TooManyRequests);
     }
 
-    // ──────────────────────────────────────────────────────────
-    // RateLimiterPolicyNames constants
-    // ──────────────────────────────────────────────────────────
-
     [Test]
     public async Task PolicyNames_McpRateLimits_MatchesLiteral()
     {
@@ -319,10 +294,6 @@ public class RateLimiterTests
         await Assert.That(RateLimiterPolicyNames.Fixed)
             .IsEqualTo("Fixed");
     }
-
-    // ──────────────────────────────────────────────────────────
-    // RateLimiterOptions has distinct McpWindowRateLimit
-    // ──────────────────────────────────────────────────────────
 
     [Test]
     public async Task RateLimiterOptions_HasSeparateMcpAndFixedLimits()
@@ -341,7 +312,6 @@ public class RateLimiterTests
             }
         };
 
-        // Verify they are independent
         await Assert.That(options.FixedWindowRateLimit.PermitLimit).IsEqualTo(40);
         await Assert.That(options.McpWindowRateLimit.PermitLimit).IsEqualTo(100);
         await Assert.That(options.FixedWindowRateLimit.Window).IsEqualTo(TimeSpan.FromMinutes(2));
