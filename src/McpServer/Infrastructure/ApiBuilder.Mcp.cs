@@ -1,3 +1,4 @@
+using System.Text.Json;
 using McpServer.Infrastructure.ToolFiltering;
 using McpServer.Tools;
 using Microsoft.Net.Http.Headers;
@@ -8,10 +9,13 @@ public static partial class ApiBuilder
 {
   public static IServiceCollection AddMcp(this IServiceCollection services, IConfiguration configuration)
   {
+    var toolSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+    toolSerializerOptions.TypeInfoResolverChain.Add(McpToolsJsonContext.Default);
+
     services
       .AddMcpServer()
       .WithHttpTransport(opts => opts.Stateless = true)
-      .WithTools<RandomNumberTools>()
+      .WithTools<RandomNumberTools>(toolSerializerOptions)
       .WithRequestFilters(filters =>
       {
         filters.AddListToolsFilter(next => async (context, cancellationToken) =>
@@ -102,7 +106,7 @@ public static partial class ApiBuilder
     }
     else
     {
-      app.UseCors();
+      app.UseCors(McpCorsPolicyName);
       endpoint.RequireCors(McpCorsPolicyName);
     }
 

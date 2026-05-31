@@ -60,7 +60,7 @@ public static partial class ApiBuilder
 
     // Register the first-rejection tracker as a singleton so each
     // WebApplicationFactory instance (and integration test) has its own state.
-    services.AddKeyedSingleton<ConcurrentDictionary<string, DateTimeOffset>>(FirstRejectionsKey);
+    services.AddKeyedSingleton<ConcurrentDictionary<string, DateTimeOffset>>(FirstRejectionsKey, new ConcurrentDictionary<string, DateTimeOffset>());
 
     services.AddRateLimiter(options =>
     {

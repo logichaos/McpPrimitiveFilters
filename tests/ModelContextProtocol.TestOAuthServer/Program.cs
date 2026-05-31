@@ -20,7 +20,8 @@ public sealed class Program
     public string[] ValidResources { get; set; } = [
         "http://localhost:5000",
         "http://localhost:5000/mcp",
-        "http://localhost:7071"
+        "http://localhost:7071",
+        "https://localhost:7072"
     ];
 
     private readonly ConcurrentDictionary<string, AuthorizationCodeInfo> _authCodes = new();

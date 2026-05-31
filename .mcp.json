@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "myserver": {
+      "type": "streamable-http",
+      "url": "https://localhost:7072",
+      "oauth": {
+        "scopes": "mcp:tools"
+      }
+    }
+  }
+}

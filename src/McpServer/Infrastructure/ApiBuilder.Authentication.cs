@@ -135,7 +135,7 @@ public static partial class ApiBuilder
         if (!app.Services.IsOAuthConfigured())
             return app;
 
-        app.UseCors();
+        app.UseCors(McpCorsPolicyName);
         app.UseAuthentication();
         app.UseAuthorization();
         return app;
