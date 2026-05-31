@@ -1,7 +1,16 @@
 <Solution>
+  <Folder Name="/SolutionItems/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path=".runsettings" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="Makefile" />
+    <File Path="README.md" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/McpServer/McpServer.csproj" />
-    <Project Path="src/McpServerSDK/McpServerSDK.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/McpServer.Integration.Tests/McpServer.Integration.Tests.csproj" />

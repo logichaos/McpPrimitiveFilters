@@ -1,12 +1,14 @@
 using McpServer.Infrastructure;
 
-var builder = WebApplication.CreateBuilder(args)
-    .AddLogging();
+var builder = WebApplication.CreateBuilder(args);
+
+builder.AddLogging();
 
 builder.Services
   .AddOAuth(builder.Configuration)
   .ConfigureRateLimiter(builder.Configuration)
-  .AddMcp();
+  .AddMcp(builder.Configuration)
+  .AddToolFiltering();
 
 var app = builder.Build();
 

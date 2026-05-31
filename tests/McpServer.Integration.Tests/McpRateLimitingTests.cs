@@ -6,12 +6,9 @@ namespace McpServer.Integration.Tests;
 
 public class McpRateLimitingTests
 {
-    [ClassDataSource<McpRateLimitingWebApplicationFactory>(Shared = SharedType.PerTestSession)]
+    [ClassDataSource<McpRateLimitingWebApplicationFactory>(Shared = SharedType.None)]
     public required McpRateLimitingWebApplicationFactory Factory { get; init; }
 
-    // ──────────────────────────────────────────────────────────
-    // Helpers
-    // ──────────────────────────────────────────────────────────
 
     private static async Task<McpClient> CreateMcpClientAsync(HttpClient httpClient)
     {
@@ -28,10 +25,6 @@ public class McpRateLimitingTests
         return await McpClient.CreateAsync(transport);
     }
 
-    // ──────────────────────────────────────────────────────────
-    // MCP client can connect and interact
-    // ──────────────────────────────────────────────────────────
-
     [Test]
     public async Task McpClient_CanConnectAndListTools()
     {
@@ -44,10 +37,6 @@ public class McpRateLimitingTests
         await Assert.That(tools.Count).IsPositive();
     }
 
-    // ──────────────────────────────────────────────────────────
-    // MCP rate limit is enforced
-    // ──────────────────────────────────────────────────────────
-
     [Test]
     public async Task McpClient_ThrowsWhenRateLimitExceeded()
     {
@@ -55,8 +44,6 @@ public class McpRateLimitingTests
         var mcpClient = await CreateMcpClientAsync(client);
 
         // Keep calling ListToolsAsync until rate-limited.
-        // The test factory has McpWindowRateLimit.PermitLimit = 10,
-        // so this takes at most a few iterations.
         var exception = await Assert.ThrowsAsync<HttpRequestException>(async () =>
         {
             while (true)
@@ -66,10 +53,6 @@ public class McpRateLimitingTests
         await Assert.That((int)(exception!.StatusCode ?? 0))
             .IsEqualTo((int)HttpStatusCode.TooManyRequests);
     }
-
-    // ──────────────────────────────────────────────────────────
-    // Rate limit rejection body is included in the exception
-    // ──────────────────────────────────────────────────────────
 
     [Test]
     public async Task McpClient_RateLimitExceptionContainsRejectionMessage()

@@ -4,14 +4,10 @@ namespace McpServer.Integration.Tests;
 
 public class RateLimitingTests
 {
-    [ClassDataSource<McpRateLimitingWebApplicationFactory>(Shared = SharedType.PerTestSession)]
+    [ClassDataSource<McpRateLimitingWebApplicationFactory>(Shared = SharedType.None)]
     public required McpRateLimitingWebApplicationFactory Factory { get; init; }
 
-    private const int FixedPermitLimit = 10; // Fixed policy from appsettings.Development.json
-
-    // ──────────────────────────────────────────────────────────
-    // / endpoint works
-    // ──────────────────────────────────────────────────────────
+    private const int FixedPermitLimit = 10;
 
     [Test]
     public async Task RootEndpoint_ReturnsExpectedBody()
@@ -25,10 +21,6 @@ public class RateLimitingTests
         await Assert.That(body).IsEqualTo("this is working");
     }
 
-    // ──────────────────────────────────────────────────────────
-    // Rate limit header is present
-    // ──────────────────────────────────────────────────────────
-
     [Test]
     public async Task RootEndpoint_ReturnsRateLimitHeader()
     {
@@ -41,28 +33,18 @@ public class RateLimitingTests
             .IsEqualTo(FixedPermitLimit.ToString());
     }
 
-    // ──────────────────────────────────────────────────────────
-    // Rate limit is enforced after exceeding permit limit
-    // ──────────────────────────────────────────────────────────
-
     [Test]
     public async Task RootEndpoint_Returns429_WhenRateLimitExceeded()
     {
         var client = Factory.CreateClient();
 
-        // Exhaust all Fixed policy permits
         for (int i = 0; i < FixedPermitLimit; i++)
             await client.GetAsync("/");
 
-        // Next request should be rate-limited
         var response = await client.GetAsync("/");
 
         await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.TooManyRequests);
     }
-
-    // ──────────────────────────────────────────────────────────
-    // Rate limit rejection includes Retry-After header
-    // ──────────────────────────────────────────────────────────
 
     [Test]
     public async Task RootEndpoint_429_IncludesRetryAfterHeader()
@@ -80,10 +62,6 @@ public class RateLimitingTests
         var retryAfter = int.Parse(response.Headers.GetValues("Retry-After").First());
         await Assert.That(retryAfter).IsPositive();
     }
-
-    // ──────────────────────────────────────────────────────────
-    // Rate limit rejection body
-    // ──────────────────────────────────────────────────────────
 
     [Test]
     public async Task RootEndpoint_429_ReturnsPlainTextBody()

@@ -4,9 +4,6 @@ using System.Security.Claims;
 
 namespace McpServer.Infrastructure.OAuth;
 
-/// <summary>
-/// Configures JWT Bearer for a local, in-memory OAuth server (development only).
-/// </summary>
 public sealed class InMemoryOAuthConfigurator : IOAuthSchemeConfigurator
 {
     public const string ProviderTypeName = "InMemory";
@@ -14,10 +11,11 @@ public sealed class InMemoryOAuthConfigurator : IOAuthSchemeConfigurator
 
     public void Configure(JwtBearerOptions options, OAuthSchemeConfig scheme, OAuthOptions oauth)
     {
-        var authority = scheme.AuthorityUrl
-            ?? throw new InvalidOperationException(
-                $"OAuth scheme '{nameof(InMemoryOAuthConfigurator)}' requires AuthorityUrl.");
+        if (string.IsNullOrEmpty(scheme.AuthorityUrl))
+            throw new InvalidOperationException(
+                $"OAuth scheme '{nameof(InMemoryOAuthConfigurator)}' requires a non-empty AuthorityUrl.");
 
+        var authority = scheme.AuthorityUrl;
         var audience = scheme.Audience ?? oauth.ServerUrl;
         var issuer = scheme.Issuer ?? authority;
 
