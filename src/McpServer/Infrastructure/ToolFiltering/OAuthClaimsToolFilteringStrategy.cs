@@ -22,11 +22,13 @@ public sealed class OAuthClaimsToolFilteringStrategy : ToolFilteringStrategy
         }
 
         var principal = httpContext.User;
+        if (principal.HasClaim("scope", "mcp.tools.all"))
+            return toolNames;
+
         return toolNames.Where(name =>
         {
             var claimType = $"mcp.tool.{name}";
-            var claim = principal.FindFirst(claimType);
-            return claim is not null && string.Equals(claim.Value, "true", StringComparison.Ordinal);
+            return principal.HasClaim("scope", claimType);
         });
     }
 }

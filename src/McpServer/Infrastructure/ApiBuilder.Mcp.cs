@@ -1,5 +1,6 @@
 using System.Text.Json;
 using McpServer.Infrastructure.ToolFiltering;
+using McpServer.Resources;
 using McpServer.Tools;
 using Microsoft.Net.Http.Headers;
 using ModelContextProtocol.Protocol;
@@ -16,6 +17,7 @@ public static partial class ApiBuilder
       .AddMcpServer()
       .WithHttpTransport(opts => opts.Stateless = true)
       .WithTools<RandomNumberTools>(toolSerializerOptions)
+      .WithResources<DemoResources>()
       .WithRequestFilters(filters =>
       {
         filters.AddListToolsFilter(next => async (context, cancellationToken) =>

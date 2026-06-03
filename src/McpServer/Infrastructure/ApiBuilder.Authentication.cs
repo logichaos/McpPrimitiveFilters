@@ -59,16 +59,16 @@ public static partial class ApiBuilder
 
         var allowedOrigins = configuration
             .GetSection("Mcp:AllowedOrigins")
-            .Get<string[]>() ?? ["http://localhost:5173"];
+            .Get<string[]>() ?? ["http://localhost:5173", "http://localhost:6274"];
 
         services.AddCors(options =>
         {
             options.AddPolicy(McpCorsPolicyName, policy =>
             {
                 policy.WithOrigins(allowedOrigins)
-                    .WithMethods("POST")
+                    .WithMethods("POST", "GET", "DELETE", "OPTIONS")
                     .WithHeaders(HeaderNames.ContentType, HeaderNames.Authorization, "MCP-Protocol-Version")
-                    .WithExposedHeaders(HeaderNames.WWWAuthenticate);
+                    .WithExposedHeaders(HeaderNames.WWWAuthenticate, "Mcp-Session-Id");
             });
         });
 
