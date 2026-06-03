@@ -1,4 +1,4 @@
-# Authenticated http MCP server with tool selection
+# Authenticated http MCP server with tool/resource selection
 
 ## credits
 
@@ -12,7 +12,7 @@
 
 ## tl;dr
 
-- This repo contains my implementation of an http MCP server, built on top of the [modelcontextprotocol/csharp-sdk](https://github.com/modelcontextprotocol/csharp-sdk), where the exposed tools can be controlled. So you can expose only selected tools from the server, depending on your need or authorization from an enterprise OAuth server.
+- This repo contains my implementation of an http MCP server, built on top of the [modelcontextprotocol/csharp-sdk](https://github.com/modelcontextprotocol/csharp-sdk), where the exposed tools and resources can be controlled. So you can expose only selected tools/resources from the server, depending on your need or authorization from an enterprise OAuth server.
 
 ## What is inside
 
