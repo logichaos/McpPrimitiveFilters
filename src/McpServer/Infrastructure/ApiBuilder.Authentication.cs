@@ -1,7 +1,9 @@
 using McpServer.Infrastructure.OAuth;
-using Microsoft.AspNetCore.Authentication;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Net.Http.Headers;
+
 using ModelContextProtocol.AspNetCore.Authentication;
 
 namespace McpServer.Infrastructure;
@@ -15,14 +17,14 @@ public static partial class ApiBuilder
     public static bool IsOAuthConfigured(this IServiceProvider services) =>
         services.GetService<OAuthMarker>() is not null;
 
-    private static readonly Dictionary<string, IOAuthSchemeConfigurator> _configurators = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, OAuthSchemeConfigurator> _configurators = new(StringComparer.OrdinalIgnoreCase)
     {
         [InMemoryOAuthConfigurator.ProviderTypeName] = new InMemoryOAuthConfigurator(),
         [EntraIdOAuthConfigurator.ProviderTypeName] = new EntraIdOAuthConfigurator(),
         [Auth0OAuthConfigurator.ProviderTypeName] = new Auth0OAuthConfigurator(),
     };
 
-    public static void RegisterOAuthConfigurator(IOAuthSchemeConfigurator configurator)
+    public static void RegisterOAuthConfigurator(OAuthSchemeConfigurator configurator)
     {
         _configurators[configurator.ProviderType] = configurator;
     }
@@ -31,15 +33,21 @@ public static partial class ApiBuilder
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        var loggerFactory = NullLoggerFactory.Instance;
+        var logger = loggerFactory.CreateLogger("McpServer.OAuth");
+
         var oauthSection = configuration.GetSection(OAuthOptions.SectionName);
         if (!oauthSection.Exists())
+        {
+            logger.LogDebug("OAuth section '{Section}' not found — auth disabled", OAuthOptions.SectionName);
             return services;
+        }
 
         var oauth = oauthSection.Get<OAuthOptions>()!;
 
         if (oauth.Schemes.Count == 0)
         {
-            Console.WriteLine("Warning: OAuth section exists but has no schemes. Auth disabled.");
+            logger.LogWarning("OAuth section exists but has no schemes — auth disabled");
             return services;
         }
 
@@ -49,9 +57,16 @@ public static partial class ApiBuilder
 
         if (enabledSchemes.Count == 0)
         {
-            Console.WriteLine("Warning: No OAuth schemes are enabled. Auth disabled.");
+            logger.LogWarning("No OAuth schemes are enabled — auth disabled");
             return services;
         }
+
+        logger.LogInformation("OAuth enabled with {SchemeCount} scheme(s): {Schemes}",
+            enabledSchemes.Count,
+            enabledSchemes.Select(s => $"{s.Key} ({s.Value.Type})"));
+
+        logger.LogDebug("OAuth config: DefaultScheme={DefaultScheme}, ServerUrl={ServerUrl}, ScopesSupported={Scopes}",
+            oauth.DefaultScheme, oauth.ServerUrl, oauth.ScopesSupported);
 
         ValidateOptions(oauth, enabledSchemes);
 
@@ -85,6 +100,7 @@ public static partial class ApiBuilder
 
         if (enabledSchemes.Count > 1)
         {
+            logger.LogInformation("Multiple schemes enabled — using MultiScheme policy scheme");
             authBuilder.AddPolicyScheme("MultiScheme", "Multi-Scheme JWT Bearer", options =>
             {
                 options.ForwardDefaultSelector = _ => enabledSchemes[0].Key;
@@ -104,11 +120,18 @@ public static partial class ApiBuilder
 
             var authority = ResolveAuthority(schemeConfig);
             if (authority is not null)
+            {
+                logger.LogDebug("Scheme '{Scheme}': resolved authority = {Authority}", schemeName, authority);
                 authorizationServers.Add(authority);
+            }
+            else
+            {
+                logger.LogDebug("Scheme '{Scheme}': no authority resolved, using auto-discovery", schemeName);
+            }
 
             authBuilder.AddJwtBearer(schemeName, options =>
             {
-                configurator.Configure(options, schemeConfig, oauth);
+                configurator.Configure(options, schemeConfig, oauth, loggerFactory);
             });
         }
 
@@ -126,6 +149,8 @@ public static partial class ApiBuilder
         });
 
         services.AddAuthorization();
+        logger.LogInformation("OAuth setup complete: {AuthServerCount} authorization server(s), CORS origins={Origins}",
+            authorizationServers.Count, allowedOrigins);
 
         return services;
     }

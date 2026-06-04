@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging.Abstractions;
-using ModelContextProtocol;
+
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 

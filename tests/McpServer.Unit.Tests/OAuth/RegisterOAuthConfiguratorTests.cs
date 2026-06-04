@@ -3,6 +3,7 @@ using McpServer.Infrastructure.OAuth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace McpServer.Unit.Tests.OAuth;
 
@@ -55,13 +56,13 @@ public class RegisterOAuthConfiguratorTests
         await Assert.That(provider.IsOAuthConfigured()).IsTrue();
     }
 
-    private sealed class CustomTestConfigurator : IOAuthSchemeConfigurator
+    private sealed class CustomTestConfigurator : OAuthSchemeConfigurator
     {
         public string ProviderTypeOverride { get; set; } = "CustomTest";
 
         public string ProviderType => ProviderTypeOverride;
 
-        public void Configure(JwtBearerOptions options, OAuthSchemeConfig scheme, OAuthOptions oauth)
+        public void Configure(JwtBearerOptions options, OAuthSchemeConfig scheme, OAuthOptions oauth, ILoggerFactory loggerFactory)
         {
             options.Authority = "https://custom.example.com/";
         }

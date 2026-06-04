@@ -1,12 +1,14 @@
 using System.Security.Claims;
 using McpServer.Infrastructure.ToolFiltering;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace McpServer.Unit.Tests.ToolFiltering;
 
 public class OAuthClaimsToolFilteringStrategyTests
 {
-    private readonly OAuthClaimsToolFilteringStrategy _strategy = new();
+    private readonly OAuthClaimsToolFilteringStrategy _strategy = new(
+        NullLogger<OAuthClaimsToolFilteringStrategy>.Instance);
 
     private static DefaultHttpContext CreateHttpContext(ClaimsPrincipal? user = null)
     {

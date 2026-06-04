@@ -1,10 +1,13 @@
 using McpServer.Infrastructure.OAuth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace McpServer.Unit.Tests.OAuth;
 
 public class OAuthConfiguratorTests
 {
+    private static readonly NullLoggerFactory LoggerFactory = NullLoggerFactory.Instance;
+
     [Test]
     public async Task InMemory_SetsAuthorityAndTokenValidation()
     {
@@ -17,7 +20,7 @@ public class OAuthConfiguratorTests
         };
         var oauth = new OAuthOptions { ServerUrl = "http://localhost:7071/" };
 
-        configurator.Configure(options, scheme, oauth);
+        configurator.Configure(options, scheme, oauth, LoggerFactory);
 
         await Assert.That(options.Authority).IsEqualTo("https://auth.example.com");
         await Assert.That(options.TokenValidationParameters.ValidateIssuer).IsTrue();
@@ -42,7 +45,7 @@ public class OAuthConfiguratorTests
             Audience = "custom-audience",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions { ServerUrl = "ignored" });
+        configurator.Configure(options, scheme, new OAuthOptions { ServerUrl = "ignored" }, LoggerFactory);
 
         await Assert.That(options.TokenValidationParameters.ValidAudience)
             .IsEqualTo("custom-audience");
@@ -60,7 +63,7 @@ public class OAuthConfiguratorTests
             Issuer = "https://custom-issuer.example.com",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.TokenValidationParameters.ValidIssuer)
             .IsEqualTo("https://custom-issuer.example.com");
@@ -78,7 +81,7 @@ public class OAuthConfiguratorTests
             DisableBackchannelSslValidation = true,
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.BackchannelHttpHandler).IsNotNull();
         await Assert.That(options.BackchannelHttpHandler).IsTypeOf<SocketsHttpHandler>();
@@ -96,7 +99,7 @@ public class OAuthConfiguratorTests
             DisableBackchannelSslValidation = false,
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.BackchannelHttpHandler).IsNull();
     }
@@ -109,7 +112,7 @@ public class OAuthConfiguratorTests
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
         {
-            configurator.Configure(new JwtBearerOptions(), scheme, new OAuthOptions());
+            configurator.Configure(new JwtBearerOptions(), scheme, new OAuthOptions(), LoggerFactory);
             return Task.CompletedTask;
         });
     }
@@ -125,7 +128,7 @@ public class OAuthConfiguratorTests
             AuthorityUrl = "https://auth.example.com",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.TokenValidationParameters.NameClaimType).IsEqualTo("name");
         await Assert.That(options.TokenValidationParameters.RoleClaimType).IsEqualTo("roles");
@@ -142,7 +145,7 @@ public class OAuthConfiguratorTests
             TenantId = "my-tenant-id",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.Authority)
             .IsEqualTo("https://login.microsoftonline.com/my-tenant-id/v2.0");
@@ -160,7 +163,7 @@ public class OAuthConfiguratorTests
             Instance = "https://login.microsoftonline.us/",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.Authority)
             .IsEqualTo("https://login.microsoftonline.us/my-tenant/v2.0");
@@ -178,7 +181,7 @@ public class OAuthConfiguratorTests
             ClientId = "api://my-app-id",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions { ServerUrl = "http://fallback" });
+        configurator.Configure(options, scheme, new OAuthOptions { ServerUrl = "http://fallback" }, LoggerFactory);
 
         await Assert.That(options.TokenValidationParameters.ValidAudience)
             .IsEqualTo("api://my-app-id");
@@ -197,7 +200,7 @@ public class OAuthConfiguratorTests
             Audience = "api://explicit-audience",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.TokenValidationParameters.ValidAudience)
             .IsEqualTo("api://explicit-audience");
@@ -211,7 +214,7 @@ public class OAuthConfiguratorTests
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
         {
-            configurator.Configure(new JwtBearerOptions(), scheme, new OAuthOptions());
+            configurator.Configure(new JwtBearerOptions(), scheme, new OAuthOptions(), LoggerFactory);
             return Task.CompletedTask;
         });
     }
@@ -227,7 +230,7 @@ public class OAuthConfiguratorTests
             Domain = "my-tenant.us.auth0.com",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.Authority)
             .IsEqualTo("https://my-tenant.us.auth0.com/");
@@ -244,7 +247,7 @@ public class OAuthConfiguratorTests
             Domain = "my-tenant.auth0.com/",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.Authority)
             .IsEqualTo("https://my-tenant.auth0.com/");
@@ -262,7 +265,7 @@ public class OAuthConfiguratorTests
             ClientId = "my-api-identifier",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions { ServerUrl = "http://fallback" });
+        configurator.Configure(options, scheme, new OAuthOptions { ServerUrl = "http://fallback" }, LoggerFactory);
 
         await Assert.That(options.TokenValidationParameters.ValidAudience)
             .IsEqualTo("my-api-identifier");
@@ -279,7 +282,7 @@ public class OAuthConfiguratorTests
             Domain = "my-tenant.auth0.com",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.TokenValidationParameters.RoleClaimType)
             .IsEqualTo("https://schemas.example.com/roles");
@@ -293,7 +296,7 @@ public class OAuthConfiguratorTests
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
         {
-            configurator.Configure(new JwtBearerOptions(), scheme, new OAuthOptions());
+            configurator.Configure(new JwtBearerOptions(), scheme, new OAuthOptions(), LoggerFactory);
             return Task.CompletedTask;
         });
     }
