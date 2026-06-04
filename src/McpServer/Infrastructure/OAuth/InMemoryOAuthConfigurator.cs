@@ -44,6 +44,7 @@ public sealed class InMemoryOAuthConfigurator : OAuthSchemeConfigurator
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+            ValidAudience = audiences.FirstOrDefault(),
             ValidAudiences = audiences,
             ValidIssuer = issuer,
             NameClaimType = "name",

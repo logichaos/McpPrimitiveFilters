@@ -16,8 +16,8 @@ public class ApiBuilderLoggingTests
 
         ApiBuilder.AddLogging(builder);
 
-        var provider = builder.Services.BuildServiceProvider();
-        var loggerProviders = provider.GetServices<ILoggerProvider>().ToList();
+        var app = builder.Build();
+        var loggerProviders = app.Services.GetServices<ILoggerProvider>().ToList();
 
         await Assert.That(loggerProviders.OfType<FakeLoggerProvider>().Count()).IsEqualTo(0);
     }
@@ -29,11 +29,38 @@ public class ApiBuilderLoggingTests
 
         ApiBuilder.AddLogging(builder);
 
-        var provider = builder.Services.BuildServiceProvider();
-        var loggerProviders = provider.GetServices<ILoggerProvider>().ToList();
+        var app = builder.Build();
+        var loggerProviders = app.Services.GetServices<ILoggerProvider>().ToList();
 
         await Assert.That(loggerProviders
             .Any(p => p.GetType().Name.Contains("Console"))).IsTrue();
+    }
+
+    [Test]
+    public async Task AddLogging_RegistersDynamicLogLevelService()
+    {
+        var builder = WebApplication.CreateBuilder(Array.Empty<string>());
+
+        ApiBuilder.AddLogging(builder);
+
+        var app = builder.Build();
+        var service = app.Services.GetService<DynamicLogLevelService>();
+
+        await Assert.That(service).IsNotNull();
+    }
+
+    [Test]
+    public async Task AddLogging_DynamicLogLevelService_IsSingleton()
+    {
+        var builder = WebApplication.CreateBuilder(Array.Empty<string>());
+
+        ApiBuilder.AddLogging(builder);
+
+        var app = builder.Build();
+        var instance1 = app.Services.GetRequiredService<DynamicLogLevelService>();
+        var instance2 = app.Services.GetRequiredService<DynamicLogLevelService>();
+
+        await Assert.That(instance1).IsEqualTo(instance2);
     }
 
     [Test]
@@ -48,8 +75,8 @@ public class ApiBuilderLoggingTests
 
         ApiBuilder.AddLogging(builder);
 
-        var provider = builder.Services.BuildServiceProvider();
-        var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+        var app = builder.Build();
+        var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
 
         await Assert.That(loggerFactory).IsNotNull();
     }

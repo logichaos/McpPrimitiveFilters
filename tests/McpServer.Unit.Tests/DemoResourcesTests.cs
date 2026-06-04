@@ -53,7 +53,8 @@ public class DemoResourcesTests
     public async Task GetWeather_ReturnsWeatherForKnownCity()
     {
         var ctx = CreateRequestContext("weather://London");
-        var result = _sut.GetWeather(ctx, "London");
+        var server = A.Fake<McpSvr>();
+        var result = _sut.GetWeather(server, ctx, "London");
 
         await Assert.That(result.Uri).IsEqualTo("weather://London");
         await Assert.That(result.MimeType).IsEqualTo("application/json");
@@ -72,9 +73,10 @@ public class DemoResourcesTests
     {
         var ctx1 = CreateRequestContext("weather://Tokyo");
         var ctx2 = CreateRequestContext("weather://Tokyo");
+        var server = A.Fake<McpSvr>();
 
-        var weather1 = JsonSerializer.Deserialize<WeatherInfo>(_sut.GetWeather(ctx1, "Tokyo").Text)!;
-        var weather2 = JsonSerializer.Deserialize<WeatherInfo>(_sut.GetWeather(ctx2, "Tokyo").Text)!;
+        var weather1 = JsonSerializer.Deserialize<WeatherInfo>(_sut.GetWeather(server, ctx1, "Tokyo").Text)!;
+        var weather2 = JsonSerializer.Deserialize<WeatherInfo>(_sut.GetWeather(server, ctx2, "Tokyo").Text)!;
 
         await Assert.That(weather1.Condition).IsEqualTo(weather2.Condition);
         await Assert.That(weather1.TemperatureCelsius).IsEqualTo(weather2.TemperatureCelsius);
@@ -86,9 +88,10 @@ public class DemoResourcesTests
     {
         var ctx1 = CreateRequestContext("weather://Paris");
         var ctx2 = CreateRequestContext("weather://Berlin");
+        var server = A.Fake<McpSvr>();
 
-        var weather1 = _sut.GetWeather(ctx1, "Paris");
-        var weather2 = _sut.GetWeather(ctx2, "Berlin");
+        var weather1 = _sut.GetWeather(server, ctx1, "Paris");
+        var weather2 = _sut.GetWeather(server, ctx2, "Berlin");
 
         await Assert.That(weather1.Text).IsNotEqualTo(weather2.Text);
     }

@@ -6,6 +6,7 @@ using McpServer.Tools;
 
 using Microsoft.Net.Http.Headers;
 
+using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
@@ -18,7 +19,13 @@ public static partial class ApiBuilder
     toolSerializerOptions.TypeInfoResolverChain.Add(McpToolsJsonContext.Default);
 
     services
-      .AddMcpServer()
+      .AddMcpServer(options =>
+      {
+        options.Capabilities = new ServerCapabilities
+        {
+          Logging = new LoggingCapability()
+        };
+      })
       .WithHttpTransport(opts => opts.Stateless = true)
       .WithTools<RandomNumberTools>(toolSerializerOptions)
       .WithResources<DemoResources>()
@@ -183,6 +190,23 @@ public static partial class ApiBuilder
 
           return await next(context, cancellationToken);
         });
+      })
+      .WithSetLoggingLevelHandler(async (ctx, ct) =>
+      {
+        if (ctx.Params?.Level is null)
+        {
+          throw new McpProtocolException(
+            "Missing required argument 'level'",
+            McpErrorCode.InvalidParams);
+        }
+
+        var levelService = ctx.Services?.GetRequiredService<DynamicLogLevelService>();
+        if (levelService is not null)
+        {
+          levelService.MinLevel = DynamicLogLevelService.MapMCPLevelToNetLevel(ctx.Params.Level);
+        }
+
+        return new EmptyResult();
       });
 
     var oauthConfigured = services.Any(sd => sd.ServiceType == typeof(OAuthMarker));
