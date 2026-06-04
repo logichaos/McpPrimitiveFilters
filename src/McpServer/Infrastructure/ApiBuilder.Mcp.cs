@@ -4,6 +4,7 @@ using McpServer.Resources;
 using McpServer.Tools;
 using Microsoft.Net.Http.Headers;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace McpServer.Infrastructure;
 public static partial class ApiBuilder
@@ -68,6 +69,106 @@ public static partial class ApiBuilder
                 Content = [new TextContentBlock { Text = $"Tool '{toolName}' is not authorized." }],
                 IsError = true
               };
+            }
+          }
+
+          return await next(context, cancellationToken);
+        });
+
+        filters.AddListResourcesFilter(next => async (context, cancellationToken) =>
+        {
+          var result = await next(context, cancellationToken);
+
+          if (result.Resources is { Count: > 0 })
+          {
+            var httpContextAccessor = context.Services?.GetService<IHttpContextAccessor>();
+            var strategies = context.Services?.GetServices<ResourceFilteringStrategy>();
+
+            if (httpContextAccessor?.HttpContext is { } httpContext && strategies is not null)
+            {
+              var resourceNames = result.Resources.Select(r => r.Name).ToList();
+              foreach (var strategy in strategies)
+              {
+                resourceNames = strategy.FilterResources(httpContext, resourceNames).ToList();
+              }
+
+              var allowedNames = new HashSet<string>(resourceNames, StringComparer.OrdinalIgnoreCase);
+              result.Resources = result.Resources.Where(r => allowedNames.Contains(r.Name)).ToList();
+            }
+          }
+
+          return result;
+        });
+
+        filters.AddListResourceTemplatesFilter(next => async (context, cancellationToken) =>
+        {
+          var result = await next(context, cancellationToken);
+
+          if (result.ResourceTemplates is { Count: > 0 })
+          {
+            var httpContextAccessor = context.Services?.GetService<IHttpContextAccessor>();
+            var strategies = context.Services?.GetServices<ResourceFilteringStrategy>();
+
+            if (httpContextAccessor?.HttpContext is { } httpContext && strategies is not null)
+            {
+              var resourceNames = result.ResourceTemplates.Select(r => r.Name).ToList();
+              foreach (var strategy in strategies)
+              {
+                resourceNames = strategy.FilterResources(httpContext, resourceNames).ToList();
+              }
+
+              var allowedNames = new HashSet<string>(resourceNames, StringComparer.OrdinalIgnoreCase);
+              result.ResourceTemplates = result.ResourceTemplates.Where(r => allowedNames.Contains(r.Name)).ToList();
+            }
+          }
+
+          return result;
+        });
+
+        filters.AddReadResourceFilter(next => async (context, cancellationToken) =>
+        {
+          var httpContextAccessor = context.Services?.GetService<IHttpContextAccessor>();
+          var strategies = context.Services?.GetServices<ResourceFilteringStrategy>();
+
+          if (httpContextAccessor?.HttpContext is { } httpContext
+              && strategies is not null
+              && context.Params?.Uri is { } uri)
+          {
+            var serverResources = context.Services?.GetServices<McpServerResource>();
+            if (serverResources is not null)
+            {
+              foreach (var resource in serverResources)
+              {
+                if (resource.IsMatch(uri))
+                {
+                  var resourceName = resource.ProtocolResource?.Name
+                    ?? resource.ProtocolResourceTemplate?.Name;
+
+                  if (resourceName is not null)
+                  {
+                    var names = new[] { resourceName }.AsEnumerable();
+                    foreach (var strategy in strategies)
+                    {
+                      names = strategy.FilterResources(httpContext, names);
+                    }
+
+                    if (!names.Any())
+                    {
+                      return new ReadResourceResult
+                      {
+                        Contents = [new TextResourceContents
+                        {
+                          Uri = uri,
+                          MimeType = "text/plain",
+                          Text = $"Resource '{uri}' is not authorized."
+                        }]
+                      };
+                    }
+                  }
+
+                  break;
+                }
+              }
             }
           }
 

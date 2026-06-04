@@ -13,15 +13,13 @@ public class OAuthClaimsToolFilteringStrategyTests
         return new DefaultHttpContext { User = user ?? new ClaimsPrincipal() };
     }
 
-    // ── Authenticated user with matching claims ──
-
     [Test]
-    public async Task AuthenticatedUser_WithMatchingClaims_ReturnsOnlyClaimedTools()
+    public async Task AuthenticatedUser_WithMatchingScopeClaims_ReturnsOnlyClaimedTools()
     {
         var principal = new ClaimsPrincipal(new ClaimsIdentity(
         [
-            new Claim("mcp.tool.GetRandomNumber", "true"),
-            new Claim("mcp.tool.Echo", "true"),
+            new Claim("scope", "mcp.tool.GetRandomNumber"),
+            new Claim("scope", "mcp.tool.Echo"),
         ], "test"));
 
         var httpContext = CreateHttpContext(principal);
@@ -35,10 +33,24 @@ public class OAuthClaimsToolFilteringStrategyTests
         await Assert.That(result).DoesNotContain("GetTimestamp");
     }
 
-    // ── Authenticated user with no tool claims ──
+    [Test]
+    public async Task AuthenticatedUser_WithToolsAllScope_ReturnsAllTools()
+    {
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(
+        [
+            new Claim("scope", "mcp.tools.all"),
+        ], "test"));
+
+        var httpContext = CreateHttpContext(principal);
+        var toolNames = new[] { "GetRandomNumber", "Echo", "GetTimestamp" };
+
+        var result = _strategy.FilterTools(httpContext, toolNames).ToList();
+
+        await Assert.That(result).Count().IsEqualTo(3);
+    }
 
     [Test]
-    public async Task AuthenticatedUser_WithNoToolClaims_ReturnsEmptyList()
+    public async Task AuthenticatedUser_WithNoToolScopes_ReturnsEmptyList()
     {
         var principal = new ClaimsPrincipal(new ClaimsIdentity(
         [
@@ -54,12 +66,10 @@ public class OAuthClaimsToolFilteringStrategyTests
         await Assert.That(result).Count().IsEqualTo(0);
     }
 
-    // ── Unauthenticated user ──
-
     [Test]
     public async Task UnauthenticatedUser_ReturnsAllToolsUnchanged()
     {
-        var httpContext = CreateHttpContext(); // no authenticated user
+        var httpContext = CreateHttpContext();
         var toolNames = new[] { "GetRandomNumber", "Echo", "GetTimestamp" };
 
         var result = _strategy.FilterTools(httpContext, toolNames).ToList();
@@ -70,15 +80,12 @@ public class OAuthClaimsToolFilteringStrategyTests
         await Assert.That(result).Contains("GetTimestamp");
     }
 
-    // ── Claim value is not "true" ──
-
     [Test]
-    public async Task AuthenticatedUser_ClaimValueIsFalse_ToolIsExcluded()
+    public async Task AuthenticatedUser_NonMatchingScopeValues_ExcludesTools()
     {
         var principal = new ClaimsPrincipal(new ClaimsIdentity(
         [
-            new Claim("mcp.tool.Echo", "false"),
-            new Claim("mcp.tool.GetRandomNumber", "true"),
+            new Claim("scope", "mcp.tool.Echo"),
         ], "test"));
 
         var httpContext = CreateHttpContext(principal);
@@ -87,25 +94,7 @@ public class OAuthClaimsToolFilteringStrategyTests
         var result = _strategy.FilterTools(httpContext, toolNames).ToList();
 
         await Assert.That(result).Count().IsEqualTo(1);
-        await Assert.That(result).Contains("GetRandomNumber");
-        await Assert.That(result).DoesNotContain("Echo");
-    }
-
-    // ── Claim value case sensitivity ──
-
-    [Test]
-    public async Task AuthenticatedUser_ClaimValueIsTrue_IsCaseSensitive()
-    {
-        var principal = new ClaimsPrincipal(new ClaimsIdentity(
-        [
-            new Claim("mcp.tool.Echo", "TRUE"), // uppercase — should not match
-        ], "test"));
-
-        var httpContext = CreateHttpContext(principal);
-        var toolNames = new[] { "Echo" };
-
-        var result = _strategy.FilterTools(httpContext, toolNames).ToList();
-
-        await Assert.That(result).Count().IsEqualTo(0);
+        await Assert.That(result).Contains("Echo");
+        await Assert.That(result).DoesNotContain("GetRandomNumber");
     }
 }

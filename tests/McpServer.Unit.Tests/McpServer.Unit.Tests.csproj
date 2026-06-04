@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="FakeItEasy" />
     <PackageReference Include="TUnit" />
   </ItemGroup>
 
