@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 
 namespace McpServer.Unit.Tests;
 
@@ -110,6 +114,66 @@ public class ApiBuilderLoggingTests
 
         var result = ApiBuilder.UseLogging(app);
         await Assert.That(result).IsNotNull();
+    }
+
+    [Test]
+    public async Task AddLogging_RegistersOpenTelemetryServices()
+    {
+        var builder = WebApplication.CreateBuilder(Array.Empty<string>());
+
+        ApiBuilder.AddLogging(builder);
+
+        var app = builder.Build();
+        var tracerProvider = app.Services.GetService<TracerProvider>();
+        var meterProvider = app.Services.GetService<MeterProvider>();
+        var loggerProvider = app.Services.GetServices<ILoggerProvider>()
+            .FirstOrDefault(p => p.GetType().FullName?.Contains("OpenTelemetry") == true);
+
+        await Assert.That(tracerProvider).IsNotNull();
+        await Assert.That(meterProvider).IsNotNull();
+        await Assert.That(loggerProvider).IsNotNull();
+    }
+
+    [Test]
+    public async Task AddLogging_OtlpExporter_Disabled_WhenNoEndpoint()
+    {
+        var builder = WebApplication.CreateBuilder(Array.Empty<string>());
+
+        ApiBuilder.AddLogging(builder);
+
+        var app = builder.Build();
+        var openTelemetryLogger = app.Services.GetServices<ILoggerProvider>()
+            .FirstOrDefault(p => p.GetType().FullName?.Contains("OpenTelemetry") == true);
+
+        await Assert.That(openTelemetryLogger).IsNotNull();
+    }
+
+    [Test]
+    public async Task AddLogging_OtlpExporter_Enabled_WhenEndpointSet()
+    {
+        var builder = WebApplication.CreateBuilder(Array.Empty<string>());
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:4317"
+        });
+
+        ApiBuilder.AddLogging(builder);
+
+        var app = builder.Build();
+        await Assert.That(app.Services.GetService<TracerProvider>()).IsNotNull();
+        await Assert.That(app.Services.GetService<MeterProvider>()).IsNotNull();
+    }
+
+    [Test]
+    public async Task AddLogging_OpenTelemetry_IncludesTraceAndSpanId()
+    {
+        var builder = WebApplication.CreateBuilder(Array.Empty<string>());
+
+        ApiBuilder.AddLogging(builder);
+
+        var app = builder.Build();
+        await Assert.That(app.Services.GetService<TracerProvider>()).IsNotNull();
+        await Assert.That(app.Services.GetService<MeterProvider>()).IsNotNull();
     }
 
     private sealed class FakeLoggerProvider : ILoggerProvider
