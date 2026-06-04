@@ -39,7 +39,7 @@ public static partial class ApiBuilder
         var oauthSection = configuration.GetSection(OAuthOptions.SectionName);
         if (!oauthSection.Exists())
         {
-            logger.LogDebug("OAuth section '{Section}' not found — auth disabled", OAuthOptions.SectionName);
+            LogOAuthSectionNotFound(logger, OAuthOptions.SectionName);
             return services;
         }
 
@@ -47,7 +47,7 @@ public static partial class ApiBuilder
 
         if (oauth.Schemes.Count == 0)
         {
-            logger.LogWarning("OAuth section exists but has no schemes — auth disabled");
+            LogOAuthNoSchemes(logger);
             return services;
         }
 
@@ -57,16 +57,16 @@ public static partial class ApiBuilder
 
         if (enabledSchemes.Count == 0)
         {
-            logger.LogWarning("No OAuth schemes are enabled — auth disabled");
+            LogOAuthNoEnabledSchemes(logger);
             return services;
         }
 
-        logger.LogInformation("OAuth enabled with {SchemeCount} scheme(s): {Schemes}",
+        LogOAuthEnabled(logger,
             enabledSchemes.Count,
-            enabledSchemes.Select(s => $"{s.Key} ({s.Value.Type})"));
+            string.Join(", ", enabledSchemes.Select(s => $"{s.Key} ({s.Value.Type})")));
 
-        logger.LogDebug("OAuth config: DefaultScheme={DefaultScheme}, ServerUrl={ServerUrl}, ScopesSupported={Scopes}",
-            oauth.DefaultScheme, oauth.ServerUrl, oauth.ScopesSupported);
+        LogOAuthConfig(logger,
+            oauth.DefaultScheme, oauth.ServerUrl, string.Join(", ", oauth.ScopesSupported ?? []));
 
         ValidateOptions(oauth, enabledSchemes);
 
@@ -100,7 +100,7 @@ public static partial class ApiBuilder
 
         if (enabledSchemes.Count > 1)
         {
-            logger.LogInformation("Multiple schemes enabled — using MultiScheme policy scheme");
+            LogOAuthMultiScheme(logger);
             authBuilder.AddPolicyScheme("MultiScheme", "Multi-Scheme JWT Bearer", options =>
             {
                 options.ForwardDefaultSelector = _ => enabledSchemes[0].Key;
@@ -121,12 +121,12 @@ public static partial class ApiBuilder
             var authority = ResolveAuthority(schemeConfig);
             if (authority is not null)
             {
-                logger.LogDebug("Scheme '{Scheme}': resolved authority = {Authority}", schemeName, authority);
+                LogOAuthSchemeAuthority(logger, schemeName, authority);
                 authorizationServers.Add(authority);
             }
             else
             {
-                logger.LogDebug("Scheme '{Scheme}': no authority resolved, using auto-discovery", schemeName);
+                LogOAuthSchemeNoAuthority(logger, schemeName);
             }
 
             authBuilder.AddJwtBearer(schemeName, options =>
@@ -149,8 +149,8 @@ public static partial class ApiBuilder
         });
 
         services.AddAuthorization();
-        logger.LogInformation("OAuth setup complete: {AuthServerCount} authorization server(s), CORS origins={Origins}",
-            authorizationServers.Count, allowedOrigins);
+        LogOAuthSetupComplete(logger,
+            authorizationServers.Count, string.Join(", ", allowedOrigins));
 
         return services;
     }

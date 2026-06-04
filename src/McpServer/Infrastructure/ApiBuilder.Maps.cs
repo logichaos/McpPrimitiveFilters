@@ -1,6 +1,6 @@
 namespace McpServer.Infrastructure;
 
-public static partial class ApiBuilder
+public static partial class ApiBuilder_Maps
 {
   public static IServiceCollection AddHealthChecksServices(this IServiceCollection services)
   {

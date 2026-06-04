@@ -75,8 +75,7 @@ public static partial class ApiBuilder
 
             if (!names.Any())
             {
-              logger?.LogWarning("Tool call denied: user={User}, tool={Tool}",
-                  httpContext.User.Identity?.Name, toolName);
+              ToolFilteringLogMessages.CallDenied(logger!, httpContext.User.Identity?.Name, toolName);
               return new CallToolResult
               {
                 Content = [new TextContentBlock { Text = $"Tool '{toolName}' is not authorized." }],
@@ -168,8 +167,7 @@ public static partial class ApiBuilder
 
                     if (!names.Any())
                     {
-                      logger?.LogWarning("Resource read denied: user={User}, resource={Resource}, uri={Uri}",
-                          httpContext.User.Identity?.Name, resourceName, uri);
+                      ResourceFilteringLogMessages.ReadDenied(logger!, httpContext.User.Identity?.Name, resourceName, uri);
                       return new ReadResourceResult
                       {
                         Contents = [new TextResourceContents
