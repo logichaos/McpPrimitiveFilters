@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -10,14 +11,54 @@ namespace McpServer.Resources;
 
 public record WeatherInfo(string City, string Condition, double TemperatureCelsius, int Humidity, double WindSpeedKmh);
 
-public record ProcessInfo(int ProcessId, string ProcessName, long WorkingSetMb, long PeakWorkingSetMb, int ThreadCount, int HandleCount, string StartTime, string TotalProcessorTime);
+public record ProcessInfo(
+    int ProcessId,
+    string ProcessName,
+    long WorkingSetMb,
+    long PeakWorkingSetMb,
+    int ThreadCount,
+    int HandleCount,
+    string StartTime,
+    string TotalProcessorTime);
 
-public record SystemInfo(string MachineName, string OsDescription, string RuntimeVersion, DateTimeOffset StartedAt, string Uptime);
+public record SystemInfo(
+    string MachineName,
+    string OsDescription,
+    string RuntimeVersion,
+    DateTimeOffset StartedAt,
+    string Uptime);
+
+internal static partial class ResourceLogMessages
+{
+    [LoggerMessage(Level = LogLevel.Debug,
+        Message = "System info: MachineName={MachineName}, OS={OsDescription}, Runtime={RuntimeVersion}")]
+    public static partial void LogSystemInfo(
+        ILogger logger,
+        [McpServer.Infrastructure.Compliance.SensitiveData] string machineName,
+        string osDescription,
+        string runtimeVersion);
+
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Process info: PID={ProcessId}, Name={ProcessName}, WSet={WorkingSetMb}MB, Threads={ThreadCount}, Handles={HandleCount}")]
+    public static partial void LogProcessInfo(
+        ILogger logger,
+        [McpServer.Infrastructure.Compliance.SensitiveData] int processId,
+        [McpServer.Infrastructure.Compliance.SensitiveData] string processName,
+        long workingSetMb,
+        int threadCount,
+        int handleCount);
+}
 
 [McpServerResourceType]
 public class DemoResources
 {
     private static readonly DateTimeOffset StartedAt = DateTimeOffset.UtcNow;
+    private readonly ILogger<DemoResources> _logger;
+
+    public DemoResources(ILogger<DemoResources> logger)
+    {
+        _logger = logger;
+    }
 
     [McpServerResource(
         UriTemplate = "server://info",
@@ -32,6 +73,8 @@ public class DemoResources
             RuntimeVersion: RuntimeInformation.FrameworkDescription,
             StartedAt: StartedAt,
             Uptime: (DateTimeOffset.UtcNow - StartedAt).ToString(@"d\d\ h\h\ m\m\ s\s"));
+
+        ResourceLogMessages.LogSystemInfo(_logger, info.MachineName, info.OsDescription, info.RuntimeVersion);
 
         return new TextResourceContents
         {
@@ -86,6 +129,14 @@ public class DemoResources
             HandleCount: proc.HandleCount,
             StartTime: proc.StartTime.ToString("O"),
             TotalProcessorTime: proc.TotalProcessorTime.ToString());
+
+        ResourceLogMessages.LogProcessInfo(
+            _logger,
+            info.ProcessId,
+            info.ProcessName,
+            info.WorkingSetMb,
+            info.ThreadCount,
+            info.HandleCount);
 
         return new TextResourceContents
         {

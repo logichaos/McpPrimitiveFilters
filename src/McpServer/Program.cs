@@ -3,6 +3,7 @@ using McpServer.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddLogging();
+builder.AddComplianceServices();
 
 builder.Services
   .AddErrorHandling()

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using FakeItEasy;
 using McpServer.Resources;
+using Microsoft.Extensions.Logging.Abstractions;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -10,7 +11,7 @@ namespace McpServer.Unit.Tests;
 
 public class DemoResourcesTests
 {
-    private readonly DemoResources _sut = new();
+    private readonly DemoResources _sut = new(NullLogger<DemoResources>.Instance);
 
     private static RequestContext<ReadResourceRequestParams> CreateRequestContext(string uri)
     {

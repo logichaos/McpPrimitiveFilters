@@ -1,10 +1,11 @@
 using McpServer.Tools;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace McpServer.Unit.Tests;
 
 public class RandomNumberToolsAdditionalTests
 {
-    private readonly RandomNumberTools _sut = new();
+    private readonly RandomNumberTools _sut = new(NullLogger<RandomNumberTools>.Instance);
 
     [Test]
     public async Task GetRandomNumber_ReturnsValueInRange()
