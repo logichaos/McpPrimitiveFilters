@@ -13,6 +13,7 @@ public class ApiBuilderMapsTests
     public async Task UseMaps_MapsRootGetEndpoint()
     {
         var builder = WebApplication.CreateBuilder(Array.Empty<string>());
+        builder.Services.AddHealthChecksServices();
         var app = builder.Build();
 
         ApiBuilder_Maps.UseMaps(app);
@@ -32,6 +33,7 @@ public class ApiBuilderMapsTests
     public async Task UseMaps_WithRateLimiter_RequiresFixedRateLimiting()
     {
         var builder = WebApplication.CreateBuilder(Array.Empty<string>());
+        builder.Services.AddHealthChecksServices();
         builder.Services.AddSingleton(new ApiBuilder.RateLimiterMarker());
         builder.Services.AddRateLimiter(opt =>
         {
@@ -61,6 +63,7 @@ public class ApiBuilderMapsTests
     public async Task UseMaps_WithoutRateLimiter_NoRateLimitingOnEndpoint()
     {
         var builder = WebApplication.CreateBuilder(Array.Empty<string>());
+        builder.Services.AddHealthChecksServices();
         var app = builder.Build();
 
         ApiBuilder_Maps.UseMaps(app);

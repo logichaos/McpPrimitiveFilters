@@ -6,6 +6,7 @@ builder.AddLogging();
 
 builder.Services
   .AddErrorHandling()
+  .AddHealthChecksServices()
   .AddOAuth(builder.Configuration)
   .ConfigureRateLimiter(builder.Configuration)
   .AddMcp(builder.Configuration)
