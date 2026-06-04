@@ -1,8 +1,11 @@
 using System.Text.Json;
+
 using McpServer.Infrastructure.ToolFiltering;
 using McpServer.Resources;
 using McpServer.Tools;
+
 using Microsoft.Net.Http.Headers;
+
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
@@ -50,6 +53,7 @@ public static partial class ApiBuilder
         {
           var httpContextAccessor = context.Services?.GetService<IHttpContextAccessor>();
           var strategies = context.Services?.GetServices<ToolFilteringStrategy>();
+          var logger = context.Services?.GetService<ILoggerFactory>()?.CreateLogger("McpServer.ToolFilter");
 
           if (httpContextAccessor?.HttpContext is { } httpContext
               && strategies is not null
@@ -64,6 +68,8 @@ public static partial class ApiBuilder
 
             if (!names.Any())
             {
+              logger?.LogWarning("Tool call denied: user={User}, tool={Tool}",
+                  httpContext.User.Identity?.Name, toolName);
               return new CallToolResult
               {
                 Content = [new TextContentBlock { Text = $"Tool '{toolName}' is not authorized." }],
@@ -129,6 +135,7 @@ public static partial class ApiBuilder
         {
           var httpContextAccessor = context.Services?.GetService<IHttpContextAccessor>();
           var strategies = context.Services?.GetServices<ResourceFilteringStrategy>();
+          var logger = context.Services?.GetService<ILoggerFactory>()?.CreateLogger("McpServer.ResourceFilter");
 
           if (httpContextAccessor?.HttpContext is { } httpContext
               && strategies is not null
@@ -154,6 +161,8 @@ public static partial class ApiBuilder
 
                     if (!names.Any())
                     {
+                      logger?.LogWarning("Resource read denied: user={User}, resource={Resource}, uri={Uri}",
+                          httpContext.User.Identity?.Name, resourceName, uri);
                       return new ReadResourceResult
                       {
                         Contents = [new TextResourceContents
