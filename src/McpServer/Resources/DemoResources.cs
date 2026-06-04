@@ -47,6 +47,7 @@ public class DemoResources
         MimeType = "application/json")]
     [Description("Returns simulated weather conditions for a given city.")]
     public TextResourceContents GetWeather(
+        ModelContextProtocol.Server.McpServer server,
         RequestContext<ReadResourceRequestParams> requestContext,
         [Description("The city name to get weather for")] string city)
     {
