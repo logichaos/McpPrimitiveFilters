@@ -108,11 +108,11 @@ If you omit the `Mcp:OAuth` section entirely, the server runs without authentica
 
 Three providers are built-in. Enable **exactly one** (or none) by setting `"Enabled": true` in `Mcp:OAuth:Schemes`:
 
-| Provider     | Best for           | Required fields                                           |
-| ------------ | ------------------ | --------------------------------------------------------- |
-| **InMemory** | Local dev / demos  | `AuthorityUrl` (point to the TestOAuthServer — see below) |
-| **EntraId**  | Azure / enterprise | `TenantId`, `ClientId`                                    |
-| **Auth0**    | SaaS identity      | `Domain`, `ClientId`                                      |
+| Provider          | Best for           | Required fields                                           |
+| ----------------- | ------------------ | --------------------------------------------------------- |
+| **InMemory**      | Local dev / demos  | `AuthorityUrl` (point to the TestOAuthServer — see below) |
+| **EntraId** (WIP) | Azure / enterprise | `TenantId`, `ClientId`                                    |
+| **Auth0** (WIP)   | SaaS identity      | `Domain`, `ClientId`                                      |
 
 **Development quick-start with the test OAuth server:**
 
@@ -198,12 +198,12 @@ Once connected, ask your AI client to "generate a random number between 1 and 50
 
 **Resources** — four example resources are registered in `src/McpServer/Resources/DemoResources.cs`:
 
-| URI | Name | Description |
-| --- | ---- | ----------- |
-| `server://info` | Server Info | Runtime info about the MCP server process |
-| `system://process-info` | Process Info | Live memory, thread, and CPU metrics |
-| `weather://{city}` | City Weather | Simulated weather for any city (template) |
-| `time://{format}` | Current Time | UTC time in `iso`, `unix`, `rfc`, or `ticks` format (template) |
+| URI                     | Name         | Description                                                    |
+| ----------------------- | ------------ | -------------------------------------------------------------- |
+| `server://info`         | Server Info  | Runtime info about the MCP server process                      |
+| `system://process-info` | Process Info | Live memory, thread, and CPU metrics                           |
+| `weather://{city}`      | City Weather | Simulated weather for any city (template)                      |
+| `time://{format}`       | Current Time | UTC time in `iso`, `unix`, `rfc`, or `ticks` format (template) |
 
 ### Step 7: Control Which Tools and Resources Are Exposed
 
