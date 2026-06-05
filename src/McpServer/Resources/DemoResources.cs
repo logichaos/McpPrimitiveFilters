@@ -34,7 +34,7 @@ internal static partial class ResourceLogMessages
         Message = "System info: MachineName={MachineName}, OS={OsDescription}, Runtime={RuntimeVersion}")]
     public static partial void LogSystemInfo(
         ILogger logger,
-        [McpServer.Infrastructure.Compliance.SensitiveData] string machineName,
+        [Infrastructure.Compliance.SensitiveData] string machineName,
         string osDescription,
         string runtimeVersion);
 
@@ -42,25 +42,20 @@ internal static partial class ResourceLogMessages
         Message = "Process info: PID={ProcessId}, Name={ProcessName}, WSet={WorkingSetMb}MB, Threads={ThreadCount}, Handles={HandleCount}")]
     public static partial void LogProcessInfo(
         ILogger logger,
-        [McpServer.Infrastructure.Compliance.SensitiveData] int processId,
-        [McpServer.Infrastructure.Compliance.SensitiveData] string processName,
+        [Infrastructure.Compliance.SensitiveData] int processId,
+        [Infrastructure.Compliance.SensitiveData] string processName,
         long workingSetMb,
         int threadCount,
         int handleCount);
 }
 
 [McpServerResourceType]
-public class DemoResources
+public class DemoResources(ILogger<DemoResources> logger)
 {
     private static readonly DateTimeOffset StartedAt = DateTimeOffset.UtcNow;
-    private readonly ILogger<DemoResources> _logger;
+    private readonly ILogger<DemoResources> _logger = logger;
 
-    public DemoResources(ILogger<DemoResources> logger)
-    {
-        _logger = logger;
-    }
-
-    [McpServerResource(
+  [McpServerResource(
         UriTemplate = "server://info",
         Name = "Server Info",
         MimeType = "application/json")]

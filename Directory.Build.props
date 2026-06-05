@@ -7,3 +7,4 @@
 
   </PropertyGroup>
 </Project>
+flatpak install flathub org.nmap.Zenmap
