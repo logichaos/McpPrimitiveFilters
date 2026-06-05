@@ -1,8 +1,4 @@
-using System.Text.Json;
-
 using McpServer.Infrastructure.ToolFiltering;
-using McpServer.Resources;
-using McpServer.Tools;
 
 using Microsoft.Net.Http.Headers;
 
@@ -13,12 +9,12 @@ using ModelContextProtocol.Server;
 namespace McpServer.Infrastructure;
 public static partial class ApiBuilder
 {
-  public static IServiceCollection AddMcp(this IServiceCollection services, IConfiguration configuration)
+  public static IServiceCollection AddMcp(
+      this IServiceCollection services,
+      IConfiguration configuration,
+      Action<IMcpServerBuilder>? configureMcp = null)
   {
-    var toolSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
-    toolSerializerOptions.TypeInfoResolverChain.Add(McpToolsJsonContext.Default);
-
-    services
+    var builder = services
       .AddMcpServer(options =>
       {
         options.Capabilities = new ServerCapabilities
@@ -26,9 +22,11 @@ public static partial class ApiBuilder
           Logging = new LoggingCapability()
         };
       })
-      .WithHttpTransport(opts => opts.Stateless = true)
-      .WithTools<RandomNumberTools>(toolSerializerOptions)
-      .WithResources<DemoResources>()
+      .WithHttpTransport(opts => opts.Stateless = true);
+
+    configureMcp?.Invoke(builder);
+
+    builder
       .WithRequestFilters(filters =>
       {
         filters.AddListToolsFilter(next => async (context, cancellationToken) =>

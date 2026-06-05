@@ -53,9 +53,8 @@ internal static partial class ResourceLogMessages
 public class DemoResources(ILogger<DemoResources> logger)
 {
     private static readonly DateTimeOffset StartedAt = DateTimeOffset.UtcNow;
-    private readonly ILogger<DemoResources> _logger = logger;
 
-  [McpServerResource(
+    [McpServerResource(
         UriTemplate = "server://info",
         Name = "Server Info",
         MimeType = "application/json")]
@@ -69,7 +68,7 @@ public class DemoResources(ILogger<DemoResources> logger)
             StartedAt: StartedAt,
             Uptime: (DateTimeOffset.UtcNow - StartedAt).ToString(@"d\d\ h\h\ m\m\ s\s"));
 
-        ResourceLogMessages.LogSystemInfo(_logger, info.MachineName, info.OsDescription, info.RuntimeVersion);
+        ResourceLogMessages.LogSystemInfo(logger, info.MachineName, info.OsDescription, info.RuntimeVersion);
 
         return new TextResourceContents
         {
@@ -126,7 +125,7 @@ public class DemoResources(ILogger<DemoResources> logger)
             TotalProcessorTime: proc.TotalProcessorTime.ToString());
 
         ResourceLogMessages.LogProcessInfo(
-            _logger,
+            logger,
             info.ProcessId,
             info.ProcessName,
             info.WorkingSetMb,

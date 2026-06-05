@@ -171,7 +171,7 @@ public class ApiBuilderMcpTests
 
         var endpoint = GetEndpoints(app)[0];
         var corsMeta = endpoint.Metadata
-            .GetMetadata<Microsoft.AspNetCore.Cors.Infrastructure.IEnableCorsAttribute>();
+            .GetMetadata<IEnableCorsAttribute>();
         await Assert.That(corsMeta).IsNotNull();
     }
 

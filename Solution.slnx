@@ -10,6 +10,7 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/McpServer.Core/McpServer.Core.csproj" />
     <Project Path="src/McpServer/McpServer.csproj" />
   </Folder>
   <Folder Name="/tests/">

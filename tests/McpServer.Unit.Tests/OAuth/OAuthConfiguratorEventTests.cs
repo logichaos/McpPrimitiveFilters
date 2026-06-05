@@ -90,7 +90,7 @@ public class OAuthConfiguratorEventTests
 
         await Assert.That(options.BackchannelHttpHandler).IsNotNull();
         await Assert.That(options.BackchannelHttpHandler)
-            .IsTypeOf<System.Net.Http.SocketsHttpHandler>();
+            .IsTypeOf<SocketsHttpHandler>();
     }
 
     [Test]
@@ -158,7 +158,7 @@ public class OAuthConfiguratorEventTests
 
         await Assert.That(options.BackchannelHttpHandler).IsNotNull();
         await Assert.That(options.BackchannelHttpHandler)
-            .IsTypeOf<System.Net.Http.SocketsHttpHandler>();
+            .IsTypeOf<SocketsHttpHandler>();
     }
 
     [Test]
