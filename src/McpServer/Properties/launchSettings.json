@@ -6,7 +6,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "http://localhost:7071"
+      "applicationUrl": "https://localhost:7072;http://localhost:7071"
     },
     "McpServerNoOAuth": {
       "commandName": "Project",
@@ -14,7 +14,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "DevNoOAuth"
       },
-      "applicationUrl": "http://localhost:7071"
+      "applicationUrl": "https://localhost:7072;http://localhost:7071"
     }
   }
 }

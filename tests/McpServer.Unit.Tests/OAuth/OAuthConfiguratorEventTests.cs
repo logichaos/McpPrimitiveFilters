@@ -1,10 +1,13 @@
 using McpServer.Infrastructure.OAuth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace McpServer.Unit.Tests.OAuth;
 
 public class OAuthConfiguratorEventTests
 {
+    private static readonly NullLoggerFactory LoggerFactory = NullLoggerFactory.Instance;
+
     [Test]
     public async Task InMemory_SetsOnTokenValidatedEvent()
     {
@@ -16,7 +19,7 @@ public class OAuthConfiguratorEventTests
             AuthorityUrl = "https://auth.example.com",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.Events).IsNotNull();
         await Assert.That(options.Events!.OnTokenValidated).IsNotNull();
@@ -33,7 +36,7 @@ public class OAuthConfiguratorEventTests
             AuthorityUrl = "https://auth.example.com",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.Events!.OnAuthenticationFailed).IsNotNull();
     }
@@ -49,7 +52,7 @@ public class OAuthConfiguratorEventTests
             TenantId = "my-tenant",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.Events).IsNotNull();
         await Assert.That(options.Events!.OnTokenValidated).IsNotNull();
@@ -66,7 +69,7 @@ public class OAuthConfiguratorEventTests
             TenantId = "my-tenant",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.Events!.OnAuthenticationFailed).IsNotNull();
     }
@@ -83,11 +86,11 @@ public class OAuthConfiguratorEventTests
             DisableBackchannelSslValidation = true,
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.BackchannelHttpHandler).IsNotNull();
         await Assert.That(options.BackchannelHttpHandler)
-            .IsTypeOf<System.Net.Http.SocketsHttpHandler>();
+            .IsTypeOf<SocketsHttpHandler>();
     }
 
     [Test]
@@ -101,7 +104,7 @@ public class OAuthConfiguratorEventTests
             TenantId = "my-tenant",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.BackchannelHttpHandler).IsNull();
     }
@@ -117,7 +120,7 @@ public class OAuthConfiguratorEventTests
             Domain = "my-tenant.auth0.com",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.Events).IsNotNull();
         await Assert.That(options.Events!.OnTokenValidated).IsNotNull();
@@ -134,7 +137,7 @@ public class OAuthConfiguratorEventTests
             Domain = "my-tenant.auth0.com",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.Events!.OnAuthenticationFailed).IsNotNull();
     }
@@ -151,11 +154,11 @@ public class OAuthConfiguratorEventTests
             DisableBackchannelSslValidation = true,
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.BackchannelHttpHandler).IsNotNull();
         await Assert.That(options.BackchannelHttpHandler)
-            .IsTypeOf<System.Net.Http.SocketsHttpHandler>();
+            .IsTypeOf<SocketsHttpHandler>();
     }
 
     [Test]
@@ -169,7 +172,7 @@ public class OAuthConfiguratorEventTests
             Domain = "my-tenant.auth0.com",
         };
 
-        configurator.Configure(options, scheme, new OAuthOptions());
+        configurator.Configure(options, scheme, new OAuthOptions(), LoggerFactory);
 
         await Assert.That(options.BackchannelHttpHandler).IsNull();
     }

@@ -1,4 +1,4 @@
-# Authenticated http MCP server with tool selection
+# Authenticated http MCP server with tool/resource selection
 
 ## credits
 
@@ -12,21 +12,20 @@
 
 ## tl;dr
 
-- This repo contains my implementation of an http MCP server, built on top of the [modelcontextprotocol/csharp-sdk](https://github.com/modelcontextprotocol/csharp-sdk), where the exposed tools can be controlled. So you can expose only selected tools from the server, depending on your need or authorization from an enterprise OAuth server.
+- This repo contains my implementation of an http MCP server, built on top of the [modelcontextprotocol/csharp-sdk](https://github.com/modelcontextprotocol/csharp-sdk), where the exposed tools and resources can be controlled. So you can expose only selected tools/resources from the server, depending on your need or authorization from an enterprise OAuth server.
 
 ## What is inside
 
-- A copy of the TestOAuthServer from the csharp-sdk tests, with modifications to show how to control what tools are accessible using scope claims returned by the server.
-- An Http MCP server which can inject different strategies to filter the exposed tools
-- An example strategy which uses appsettings to control which tools are exposed by the server. (ex. giving someone who runs it locally a direct way to control which tools to show)
-- An example strategy using JWT bearer scope claims to filter the tools using the supplied scope claims by the OAuth server. (ex. giving someone in an enterprise setting a way of controlling which tools someone can access)
+- A copy of the TestOAuthServer from the csharp-sdk tests, with modifications to show how to control what tools and resources are accessible using scope claims returned by the server.
+- An Http MCP server which can inject different strategies to filter the exposed tools and resources
+- An example strategy which uses appsettings to control which tools/resources are exposed by the server. (ex. giving someone who runs it locally a direct way to control which tools to show)
+- An example strategy using JWT bearer scope claims to filter the tools/resources using the supplied scope claims by the OAuth server. (ex. giving someone in an enterprise setting a way of controlling which tools/resources someone can access)
 
 ## Disclaimer
 
 - This is a repo for me to learn more about the sdk, as well as the capabilities of MCP, I try hard to make it "production ready", so if you think something is missing, don't hesitate to create an issue.
 - I can't promise to have time for all feedback, but, as long as I do, I will ;-)
 - I used AI assisted code generation for the project. The way I use it is more of a "learner". If I get stuck on something, I brainstorm with the agent and I have a solution proposed/implemented, then I go through all generated code and try to understand how it works/propose changes, according to my engineering skills. Once I have a good grasp of what needs to be done, I scratch everything and start anew, with the learnings I have made from the previous run, along with unit and integration tests.
-- I use openspec for spec driven development. I have found the results produced this way are more consistent than just telling the AI agent to do something out of the blue (for bigger tasks).
 - I have created this code from scratch many times, and only when I reach a point that I am satisfied with, will I have a snapshot upon which I will do the whole rinse-and-repeat cycle all over again.
 - This is my first public repo with code that I created. It's scary, but I would be very happy if anyone can use what I learned here to make their lives easier.
 - Along with learning about MCP, I have decided to try and use [JJ vcs](https://www.jj-vcs.dev/latest/) for version control.
@@ -109,11 +108,11 @@ If you omit the `Mcp:OAuth` section entirely, the server runs without authentica
 
 Three providers are built-in. Enable **exactly one** (or none) by setting `"Enabled": true` in `Mcp:OAuth:Schemes`:
 
-| Provider     | Best for           | Required fields                                           |
-| ------------ | ------------------ | --------------------------------------------------------- |
-| **InMemory** | Local dev / demos  | `AuthorityUrl` (point to the TestOAuthServer — see below) |
-| **EntraId**  | Azure / enterprise | `TenantId`, `ClientId`                                    |
-| **Auth0**    | SaaS identity      | `Domain`, `ClientId`                                      |
+| Provider          | Best for           | Required fields                                           |
+| ----------------- | ------------------ | --------------------------------------------------------- |
+| **InMemory**      | Local dev / demos  | `AuthorityUrl` (point to the TestOAuthServer — see below) |
+| **EntraId** (WIP) | Azure / enterprise | `TenantId`, `ClientId`                                    |
+| **Auth0** (WIP)   | SaaS identity      | `Domain`, `ClientId`                                      |
 
 **Development quick-start with the test OAuth server:**
 
@@ -183,19 +182,38 @@ Point your MCP client at the server's root URL. The server exposes:
 
 The client automatically discovers the authorization server metadata and performs the MCP-standard OAuth 2.0 flow. See the [OAuth settings](#oauth-settings) section for what gets advertised.
 
-### Step 6: Call a Tool
+#### using mcp-inspector
 
-Once connected, ask your AI client to "generate a random number between 1 and 50." The client discovers the available tools automatically. The server currently provides five example tools: `GetRandomNumber`, `GetTimestamp`, `Echo`, `ListUsers`, and `GetServerStats`. You can add your own tools by following the same pattern (see `src/McpServer/Tools/RandomNumberTools.cs`).
+- if using [mcp-inspector](https://github.com/modelcontextprotocol/inspector), you might need to set the NODE_TLS_REJECT_UNAUTHORIZED environment variable to 0 before calling, since node requires special treatment for self-signed certificates
 
-### Step 7: Control Which Tools Are Exposed
+```bash
+NODE_TLS_REJECT_UNAUTHORIZED="0" mcp-inspector
+```
 
-This is the core idea of the project. The server currently registers tools through `WithTools<T>()` in `ApiBuilder.Mcp.cs`. To control which tools clients can see, you have several strategies:
+### Step 6: Call a Tool or Read a Resource
 
-- **Static filtering in code** — simply add or remove `WithTools<X>()` calls to control the total tool set
-- **Configuration-based filtering** — a strategy that reads an allow-list from `appsettings.json` (`Mcp:AllowedTools` section)
-- **Scope-based filtering** — a strategy that inspects JWT claims of the form `mcp.tool.{tool_name}` and only exposes tools matching those claims
+Once connected, ask your AI client to "generate a random number between 1 and 50." The client discovers the available tools and resources automatically.
 
-The last strategy is the most powerful for enterprise setups: your identity provider assigns claims like `mcp.tool.GetRandomNumber` with value `"true"`, and the server dynamically hides tools the caller isn't authorized to see.
+**Tools** — five example tools are provided: `GetRandomNumber`, `GetTimestamp`, `Echo`, `ListUsers`, and `GetServerStats`. Add your own by following the same pattern in `src/McpServer/Tools/RandomNumberTools.cs`.
+
+**Resources** — four example resources are registered in `src/McpServer/Resources/DemoResources.cs`:
+
+| URI                     | Name         | Description                                                    |
+| ----------------------- | ------------ | -------------------------------------------------------------- |
+| `server://info`         | Server Info  | Runtime info about the MCP server process                      |
+| `system://process-info` | Process Info | Live memory, thread, and CPU metrics                           |
+| `weather://{city}`      | City Weather | Simulated weather for any city (template)                      |
+| `time://{format}`       | Current Time | UTC time in `iso`, `unix`, `rfc`, or `ticks` format (template) |
+
+### Step 7: Control Which Tools and Resources Are Exposed
+
+This is the core idea of the project. Tools are registered via `WithTools<T>()` and resources via `WithResources<T>()` in `ApiBuilder.Mcp.cs`. To control what clients can see, you have several strategies — all of which apply equally to both tools and resources:
+
+- **Static filtering in code** — add or remove `WithTools<X>()` / `WithResources<X>()` calls to control the total set
+- **Configuration-based filtering** — a strategy that reads an allow-list from `appsettings.json` (`Mcp:AllowedTools` / `Mcp:AllowedResources` sections)
+- **Scope-based filtering** — a strategy that inspects JWT claims of the form `mcp.tool.{tool_name}` / `mcp.resource.{resource_name}` and only exposes items matching those claims
+
+The scope-based strategy is the most powerful for enterprise setups: your identity provider assigns claims like `mcp.tool.GetRandomNumber` with value `"true"`, and the server dynamically hides tools and resources the caller isn't authorized to see.
 
 ---
 
@@ -209,24 +227,30 @@ AuthenticatedHttpMcpServer/
 │   └── McpServer/                         # The MCP server application
 │       ├── Program.cs                     # Application entry point
 │       ├── Infrastructure/                # Cross-cutting concerns, wired via extension methods
-│       │   ├── ApiBuilder.Mcp.cs          # MCP server & tool registration
-│       │   ├── ApiBuilder.Authentication.cs  # OAuth wiring, scheme configurators
-│       │   ├── ApiBuilder.Maps.cs         # Health-check endpoint
-│       │   ├── ApiBuilder.RateLimiter.cs  # Rate-limiting policies
-│       │   ├── ApiBuilder.ToolFiltering.cs  # Tool filtering strategy registration
-│       │   ├── ApiBuilder.Logging.cs      # Logging setup
-│       │   ├── ToolFiltering/             # Pluggable tool visibility strategies
-│       │   │   ├── ToolFilteringStrategy.cs         # Strategy interface
-│       │   │   ├── AppSettingsToolFilteringStrategy.cs  # Config-based allowlist
-│       │   │   └── OAuthClaimsToolFilteringStrategy.cs  # JWT claims-based filtering
+│       │   ├── ApiBuilder.Mcp.cs          # MCP server, tool & resource registration
+│       │   ├── ApiBuilder.Authentication.cs     # OAuth wiring, scheme configurators
+│       │   ├── ApiBuilder.Maps.cs               # Health-check endpoint
+│       │   ├── ApiBuilder.RateLimiter.cs        # Rate-limiting policies
+│       │   ├── ApiBuilder.ToolFiltering.cs      # Tool filtering strategy registration
+│       │   ├── ApiBuilder.ResourceFiltering.cs  # Resource filtering strategy registration
+│       │   ├── ApiBuilder.Logging.cs            # Logging setup
+│       │   ├── ToolFiltering/             # Pluggable tool & resource visibility strategies
+│       │   │   ├── ToolFilteringStrategy.cs              # Tool strategy interface
+│       │   │   ├── AppSettingsToolFilteringStrategy.cs   # Config-based tool allowlist
+│       │   │   ├── OAuthClaimsToolFilteringStrategy.cs   # JWT claims-based tool filtering
+│       │   │   ├── ResourceFilteringStrategy.cs          # Resource strategy interface
+│       │   │   ├── AppSettingsResourceFilteringStrategy.cs  # Config-based resource allowlist
+│       │   │   └── OAuthClaimsResourceFilteringStrategy.cs # JWT claims-based resource filtering
 │       │   └── OAuth/                     # Provider-specific JWT configurators
 │       │       ├── IOAuthSchemeConfigurator.cs
 │       │       ├── OAuthOptions.cs
 │       │       ├── InMemoryOAuthConfigurator.cs
 │       │       ├── EntraIdOAuthConfigurator.cs
 │       │       └── Auth0OAuthConfigurator.cs
-│       └── Tools/
-│           └── RandomNumberTools.cs       # Example MCP tool
+│       ├── Tools/
+│       │   └── RandomNumberTools.cs       # Example MCP tools
+│       └── Resources/
+│           └── DemoResources.cs           # Example MCP resources
 ├── tests/
 │   ├── McpServer.Unit.Tests/              # Unit tests for authentication, rate limiting
 │   ├── McpServer.Integration.Tests/       # End-to-end tests using in-memory Kestrel
@@ -287,7 +311,8 @@ flowchart TD
     E --> F
     F --> G["AddMcp()"]
     G --> G2["AddToolFiltering()"]
-    G2 --> H["builder.Build()"]
+    G2 --> G3["AddResourceFiltering()"]
+    G3 --> H["builder.Build()"]
     H --> I["UseLogging()"]
     I --> J{"OAuth configured?"}
     J -->|Yes| K["UseOAuth()<br/>CORS + AuthN + AuthZ"]
@@ -415,7 +440,10 @@ classDiagram
           "DisplayName": "Local Dev OAuth Server",
           "Type": "InMemory",
           "AuthorityUrl": "https://localhost:7029", // TestOAuthServer URL
-          "Audience": null, // falls back to ServerUrl
+          // Both Audience and ServerUrl are added to ValidAudiences, so tokens are
+          // accepted regardless of which endpoint (HTTP or HTTPS) the client used.
+          // Set Audience to the HTTP URL when connecting MCP Inspector over plain HTTP.
+          "Audience": "http://localhost:7071/",
           "DisableBackchannelSslValidation": true, // allow self-signed dev certs
         },
 
@@ -456,7 +484,7 @@ Each configurator translates the generic `OAuthSchemeConfig` into provider-speci
    - `EntraId`: builds `{Instance}/{TenantId}/v2.0`
    - `Auth0`: builds `https://{Domain}/`
 
-2. **Audience resolution** — Falls back in order: explicit `Audience` → `ClientId` → `ServerUrl`. This ensures the JWT `aud` claim is validated correctly.
+2. **Audience resolution** — The `InMemory` configurator collects all non-empty values from `scheme.Audience` and `oauth.ServerUrl` into a `ValidAudiences` set, so a token is accepted if its `aud` matches either. `EntraId` and `Auth0` fall back in order: explicit `Audience` → `ClientId` → `ServerUrl`. This ensures the JWT `aud` claim is validated correctly even when the server is reachable on multiple URLs (e.g. `http://localhost:7071` and `https://localhost:7072` during development).
 
 3. **Token validation** — Each configurator sets up `TokenValidationParameters` (issuer, audience, lifetime, signing key) and optional event hooks for diagnostic logging.
 
@@ -484,40 +512,46 @@ When OAuth is enabled, the server automatically exposes `/.well-known/oauth-auth
 
 MCP clients use this endpoint to discover how to authenticate before making tool calls.
 
-### Tool Visibility Strategy
+### Tool & Resource Visibility Strategy
 
-The project's core value proposition is **controlling which tools a client can see**. Two pluggable filtering strategies are wired into the MCP request pipeline:
+The project's core value proposition is **controlling which tools and resources a client can see**. Two pluggable filtering strategies are wired into the MCP request pipeline for both tools and resources:
 
 ```mermaid
 flowchart LR
     subgraph Client [🔍 Client Request]
         A[tools/list]
+        A2[resources/list]
     end
 
     subgraph Server [🖥️ MCP Server]
         B[All Registered Tools]
-        C{"🔬 Filter Strategy"}
+        C{"🔬 Tool Filter"}
         D[Exposed Tools]
+        B2[All Registered Resources]
+        C2{"🔬 Resource Filter"}
+        D2[Exposed Resources]
     end
 
     subgraph Strategies [🧩 Strategies]
-        E["📋 Config-Based<br/>Whitelist from appsettings"]
-        F["🎫 Scope-Based<br/>JWT claims → tools"]
+        E["📋 Config-Based<br/>Allowlist from appsettings"]
+        F["🎫 Scope-Based<br/>JWT claims → items"]
     end
 
-    A --> B
-    B --> C
-    C --> D
-    D --> A
+    A --> B --> C --> D --> A
+    A2 --> B2 --> C2 --> D2 --> A2
 
     C --> E
     C --> F
+    C2 --> E
+    C2 --> F
 
     style C fill:#e8a838,color:#000
+    style C2 fill:#e8a838,color:#000
     style D fill:#50b86c,color:#fff
+    style D2 fill:#50b86c,color:#fff
 ```
 
-- **Config-Based**: An admin lists allowed tools in `appsettings.json` under `Mcp:AllowedTools`. Simple, no identity provider needed.
-- **Scope-Based**: The JWT carries claims of the form `mcp.tool.{tool_name}` with value `"true"` — the filter only shows tools matching the caller's claims. This is the enterprise-grade approach.
+- **Config-Based**: An admin lists allowed tools in `Mcp:AllowedTools` and allowed resources in `Mcp:AllowedResources` in `appsettings.json`. Simple, no identity provider needed.
+- **Scope-Based**: The JWT carries claims of the form `mcp.tool.{tool_name}` / `mcp.resource.{resource_name}` with value `"true"` — the filter only exposes items matching the caller's claims. This is the enterprise-grade approach.
 
-Both strategies implement the `ToolFilteringStrategy` interface and are injected into the MCP server's pipeline, making them swappable without changing the tool code. The `AppSettingsToolFilteringStrategy` is applied first, then `OAuthClaimsToolFilteringStrategy` — a tool must pass both (AND semantics). Additional custom strategies can be registered via `services.AddSingleton<ToolFilteringStrategy, T>()` before building the app.
+All strategies implement the same pipeline pattern (`ToolFilteringStrategy` / `ResourceFilteringStrategy`). The config-based strategy is applied first, then the OAuth claims strategy — an item must pass both (AND semantics). Additional custom strategies can be registered via `services.AddSingleton<ToolFilteringStrategy, T>()` or `services.AddSingleton<ResourceFilteringStrategy, T>()` before building the app. The filtering also applies to `tools/call` and `resources/read` requests, not just listing — so a denied item cannot be invoked directly either.

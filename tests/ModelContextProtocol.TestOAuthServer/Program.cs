@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace ModelContextProtocol.TestOAuthServer;
 
@@ -20,7 +21,8 @@ public sealed class Program
     public string[] ValidResources { get; set; } = [
         "http://localhost:5000",
         "http://localhost:5000/mcp",
-        "http://localhost:7071"
+        "http://localhost:7071",
+        "https://localhost:7072"
     ];
 
     private readonly ConcurrentDictionary<string, AuthorizationCodeInfo> _authCodes = new();
@@ -131,6 +133,7 @@ public sealed class Program
         });
 
         builder.Services.AddRoutingCore();
+        builder.Services.AddCors();
         builder.Services.AddLogging();
 
         builder.Services.ConfigureHttpJsonOptions(jsonOptions =>
@@ -145,6 +148,12 @@ public sealed class Program
         }
 
         var app = builder.Build();
+
+        app.UseCors(policy => policy
+            .WithOrigins("http://localhost:6274", "http://localhost:5173")
+            .WithMethods("GET", "POST", "OPTIONS")
+            .WithHeaders("Content-Type", "Authorization")
+            .WithExposedHeaders("WWW-Authenticate"));
 
         var clientId = "demo-client";
         var clientSecret = "demo-secret";
@@ -640,22 +649,22 @@ public sealed class Program
             { "kid", _keyId },
         };
 
-        var payload = new Dictionary<string, string>
+        var payload = new JsonObject
         {
-            { "iss", _url },
-            { "sub", $"user-{clientId}" },
-            { "name", $"user-{clientId}" },
-            { "aud", resource?.ToString() ?? clientId },
-            { "client_id", clientId },
-            { "jti", jwtId },
-            { "iat", issuedAt.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture) },
-            { "exp", expiresAt.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture) },
-            { "scope", string.Join(" ", scopes) },
+            ["iss"] = _url,
+            ["sub"] = $"user-{clientId}",
+            ["name"] = $"user-{clientId}",
+            ["aud"] = resource?.ToString() ?? clientId,
+            ["client_id"] = clientId,
+            ["jti"] = jwtId,
+            ["iat"] = issuedAt.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture),
+            ["exp"] = expiresAt.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture),
+            ["scope"] = new JsonArray(scopes.Select(s => JsonValue.Create(s)).ToArray<JsonNode?>())
         };
 
         // Create JWT token
         var headerJson = JsonSerializer.Serialize(header, OAuthJsonContext.Default.DictionaryStringString);
-        var payloadJson = JsonSerializer.Serialize(payload, OAuthJsonContext.Default.DictionaryStringString);
+        var payloadJson = payload.ToJsonString();
 
         var headerBase64 = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(headerJson));
         var payloadBase64 = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(payloadJson));
