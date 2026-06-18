@@ -1,22 +1,20 @@
 using McpPrimitiveFilters;
-using Microsoft.AspNetCore.Http;
 
-namespace McpServer.Unit.Tests.McpPrimitiveFilters;
+namespace McpPrimitiveFilters.Unit.Tests;
 
 public class McpPrimitiveFilteringStrategyTests
 {
-    private static DefaultHttpContext EmptyContext => new();
 
     [Test]
     public async Task FilterPrimitives_DispatchesToCorrectOverride()
     {
         var strategy = new TestableStrategy();
 
-        var toolResult = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Tool,
+        var toolResult = strategy.FilterPrimitives(McpPrimitiveType.Tool,
             new[] { "a", "b" }).ToList();
-        var resourceResult = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Resource,
+        var resourceResult = strategy.FilterPrimitives(McpPrimitiveType.Resource,
             new[] { "a", "b" }).ToList();
-        var promptResult = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Prompt,
+        var promptResult = strategy.FilterPrimitives(McpPrimitiveType.Prompt,
             new[] { "a", "b" }).ToList();
 
         await Assert.That(strategy.LastCalledType).IsEqualTo(McpPrimitiveType.Prompt);
@@ -31,9 +29,9 @@ public class McpPrimitiveFilteringStrategyTests
         var strategy = new DefaultPassThroughStrategy();
         var names = new[] { "one", "two", "three" };
 
-        var toolResult = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Tool, names).ToList();
-        var resourceResult = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Resource, names).ToList();
-        var promptResult = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Prompt, names).ToList();
+        var toolResult = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
+        var resourceResult = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
+        var promptResult = strategy.FilterPrimitives(McpPrimitiveType.Prompt, names).ToList();
 
         await Assert.That(toolResult).IsEquivalentTo(names);
         await Assert.That(resourceResult).IsEquivalentTo(names);
@@ -44,19 +42,19 @@ public class McpPrimitiveFilteringStrategyTests
     {
         public McpPrimitiveType LastCalledType { get; private set; }
 
-        protected override IEnumerable<string> FilterTools(HttpContext ctx, IEnumerable<string> names)
+        protected override IEnumerable<string> FilterTools(IEnumerable<string> names)
         {
             LastCalledType = McpPrimitiveType.Tool;
             return [];
         }
 
-        protected override IEnumerable<string> FilterResources(HttpContext ctx, IEnumerable<string> names)
+        protected override IEnumerable<string> FilterResources(IEnumerable<string> names)
         {
             LastCalledType = McpPrimitiveType.Resource;
             return names;
         }
 
-        protected override IEnumerable<string> FilterPrompts(HttpContext ctx, IEnumerable<string> names)
+        protected override IEnumerable<string> FilterPrompts(IEnumerable<string> names)
         {
             LastCalledType = McpPrimitiveType.Prompt;
             return names;

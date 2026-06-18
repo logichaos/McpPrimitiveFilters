@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using McpServer.Infrastructure;
+using McpServer.Prompts;
 using McpServer.Resources;
 using McpServer.Tools;
 
@@ -14,6 +15,7 @@ builder.Services
   .AddHealthChecksServices()
   .AddOAuth(builder.Configuration)
   .ConfigureRateLimiter(builder.Configuration)
+  .AddMcpPrimitiveFilters()
   .AddMcp(builder.Configuration, mcp =>
   {
     var toolSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
@@ -21,7 +23,7 @@ builder.Services
 
     mcp.WithTools<RandomNumberTools>(toolSerializerOptions)
        .WithResources<DemoResources>()
-       .AddMcpPrimitiveFilters();
+       .WithPrompts<DemoPrompts>();
   });
 
 var app = builder.Build();

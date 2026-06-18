@@ -1,13 +1,11 @@
 using McpPrimitiveFilters.Strategies;
 
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
 namespace McpPrimitiveFilters.Unit.Tests;
 
 public class AppSettingsPrimitiveFilteringStrategyExtendedTests
 {
-    private static DefaultHttpContext EmptyContext => new();
 
     [Test]
     public async Task AllThreeSections_Configured_EachFiltersIndependently()
@@ -23,11 +21,11 @@ public class AppSettingsPrimitiveFilteringStrategyExtendedTests
 
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
 
-        var toolsResult = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Tool,
+        var toolsResult = strategy.FilterPrimitives(McpPrimitiveType.Tool,
             new[] { "ToolA", "ToolB" }).ToList();
-        var resourcesResult = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Resource,
+        var resourcesResult = strategy.FilterPrimitives(McpPrimitiveType.Resource,
             new[] { "ResourceA", "ResourceB" }).ToList();
-        var promptsResult = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Prompt,
+        var promptsResult = strategy.FilterPrimitives(McpPrimitiveType.Prompt,
             new[] { "PromptA", "PromptB" }).ToList();
 
         await Assert.That(toolsResult).Count().IsEqualTo(1);
@@ -47,7 +45,7 @@ public class AppSettingsPrimitiveFilteringStrategyExtendedTests
 
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
 
-        var result = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Tool,
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Tool,
             Array.Empty<string>()).ToList();
 
         await Assert.That(result).Count().IsEqualTo(0);
@@ -65,7 +63,7 @@ public class AppSettingsPrimitiveFilteringStrategyExtendedTests
 
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
 
-        var result = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Tool,
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Tool,
             new[] { "OnlyTool" }).ToList();
 
         await Assert.That(result).Count().IsEqualTo(1);
@@ -84,7 +82,7 @@ public class AppSettingsPrimitiveFilteringStrategyExtendedTests
 
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
 
-        var result = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Tool,
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Tool,
             new[] { "MyTool" }).ToList();
 
         await Assert.That(result).Count().IsEqualTo(0);
@@ -99,7 +97,7 @@ public class AppSettingsPrimitiveFilteringStrategyExtendedTests
 
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
 
-        var result = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Tool,
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Tool,
             new[] { "ToolA", "ToolB", "ToolC" }).ToList();
 
         await Assert.That(result).Count().IsEqualTo(3);

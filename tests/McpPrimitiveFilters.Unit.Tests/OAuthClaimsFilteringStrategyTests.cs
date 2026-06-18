@@ -1,20 +1,24 @@
 using System.Security.Claims;
+using FakeItEasy;
 using McpPrimitiveFilters;
 using McpPrimitiveFilters.Strategies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace McpServer.Unit.Tests.McpPrimitiveFilters;
+namespace McpPrimitiveFilters.Unit.Tests;
 
 public class OAuthClaimsFilteringStrategyTests
 {
-    private readonly OAuthClaimsFilteringStrategy _strategy = new(
-        NullLogger<OAuthClaimsFilteringStrategy>.Instance);
+    private static OAuthClaimsFilteringStrategy CreateStrategy(HttpContext? httpContext = null)
+    {
+        var accessor = A.Fake<IHttpContextAccessor>();
+        A.CallTo(() => accessor.HttpContext).Returns(httpContext!);
+        return new OAuthClaimsFilteringStrategy(
+            accessor, NullLogger<OAuthClaimsFilteringStrategy>.Instance);
+    }
 
     private static DefaultHttpContext CreateHttpContext(ClaimsPrincipal? user = null)
         => new() { User = user ?? new ClaimsPrincipal() };
-
-    // ── Tools ──
 
     [Test]
     public async Task AuthenticatedUser_WithMatchingToolScopes_ReturnsOnlyClaimedTools()
@@ -24,10 +28,11 @@ public class OAuthClaimsFilteringStrategyTests
             new Claim("scope", "mcp.tool.Echo"),
         ], "test"));
 
-        var ctx = CreateHttpContext(principal);
+        var httpContext = CreateHttpContext(principal);
+        var strategy = CreateStrategy(httpContext);
         var names = new[] { "GetRandomNumber", "Echo", "GetTimestamp" };
 
-        var result = _strategy.FilterPrimitives(ctx, McpPrimitiveType.Tool, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(2);
         await Assert.That(result).Contains("GetRandomNumber");
@@ -42,10 +47,11 @@ public class OAuthClaimsFilteringStrategyTests
             new Claim("scope", "mcp.tools.all"),
         ], "test"));
 
-        var ctx = CreateHttpContext(principal);
+        var httpContext = CreateHttpContext(principal);
+        var strategy = CreateStrategy(httpContext);
         var names = new[] { "GetRandomNumber", "Echo", "GetTimestamp" };
 
-        var result = _strategy.FilterPrimitives(ctx, McpPrimitiveType.Tool, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(3);
     }
@@ -57,10 +63,11 @@ public class OAuthClaimsFilteringStrategyTests
             new Claim("sub", "user123"),
         ], "test"));
 
-        var ctx = CreateHttpContext(principal);
+        var httpContext = CreateHttpContext(principal);
+        var strategy = CreateStrategy(httpContext);
         var names = new[] { "GetRandomNumber", "Echo", "GetTimestamp" };
 
-        var result = _strategy.FilterPrimitives(ctx, McpPrimitiveType.Tool, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(0);
     }
@@ -68,15 +75,24 @@ public class OAuthClaimsFilteringStrategyTests
     [Test]
     public async Task UnauthenticatedUser_ReturnsAllToolsUnchanged()
     {
-        var ctx = CreateHttpContext();
+        var strategy = CreateStrategy(CreateHttpContext());
         var names = new[] { "GetRandomNumber", "Echo", "GetTimestamp" };
 
-        var result = _strategy.FilterPrimitives(ctx, McpPrimitiveType.Tool, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(3);
     }
 
-    // ── Resources ──
+    [Test]
+    public async Task NullHttpContext_ReturnsAllToolsUnchanged()
+    {
+        var strategy = CreateStrategy(null);
+        var names = new[] { "GetRandomNumber", "Echo" };
+
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
+
+        await Assert.That(result).Count().IsEqualTo(2);
+    }
 
     [Test]
     public async Task AuthenticatedUser_WithMatchingResourceScopes_ReturnsOnlyClaimed()
@@ -86,10 +102,11 @@ public class OAuthClaimsFilteringStrategyTests
             new Claim("scope", "mcp.resource.Process Info"),
         ], "test"));
 
-        var ctx = CreateHttpContext(principal);
+        var httpContext = CreateHttpContext(principal);
+        var strategy = CreateStrategy(httpContext);
         var names = new[] { "Server Info", "Process Info", "Current Time" };
 
-        var result = _strategy.FilterPrimitives(ctx, McpPrimitiveType.Resource, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(2);
         await Assert.That(result).Contains("Server Info");
@@ -103,10 +120,11 @@ public class OAuthClaimsFilteringStrategyTests
             new Claim("scope", "mcp.resources.all"),
         ], "test"));
 
-        var ctx = CreateHttpContext(principal);
+        var httpContext = CreateHttpContext(principal);
+        var strategy = CreateStrategy(httpContext);
         var names = new[] { "Server Info", "City Weather", "Process Info", "Current Time" };
 
-        var result = _strategy.FilterPrimitives(ctx, McpPrimitiveType.Resource, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(4);
     }
@@ -118,26 +136,14 @@ public class OAuthClaimsFilteringStrategyTests
             new Claim("email", "user@example.com"),
         ], "test"));
 
-        var ctx = CreateHttpContext(principal);
+        var httpContext = CreateHttpContext(principal);
+        var strategy = CreateStrategy(httpContext);
         var names = new[] { "Server Info", "Process Info" };
 
-        var result = _strategy.FilterPrimitives(ctx, McpPrimitiveType.Resource, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(0);
     }
-
-    [Test]
-    public async Task UnauthenticatedUser_ReturnsAllResourcesUnchanged()
-    {
-        var ctx = CreateHttpContext();
-        var names = new[] { "Server Info", "Process Info" };
-
-        var result = _strategy.FilterPrimitives(ctx, McpPrimitiveType.Resource, names).ToList();
-
-        await Assert.That(result).Count().IsEqualTo(2);
-    }
-
-    // ── Prompts ──
 
     [Test]
     public async Task AuthenticatedUser_WithMatchingPromptScopes_ReturnsOnlyClaimed()
@@ -146,10 +152,11 @@ public class OAuthClaimsFilteringStrategyTests
             new Claim("scope", "mcp.prompt.Greeting"),
         ], "test"));
 
-        var ctx = CreateHttpContext(principal);
+        var httpContext = CreateHttpContext(principal);
+        var strategy = CreateStrategy(httpContext);
         var names = new[] { "Greeting", "Help", "SecretPrompt" };
 
-        var result = _strategy.FilterPrimitives(ctx, McpPrimitiveType.Prompt, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Prompt, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(1);
         await Assert.That(result).Contains("Greeting");
@@ -162,10 +169,11 @@ public class OAuthClaimsFilteringStrategyTests
             new Claim("scope", "mcp.prompts.all"),
         ], "test"));
 
-        var ctx = CreateHttpContext(principal);
+        var httpContext = CreateHttpContext(principal);
+        var strategy = CreateStrategy(httpContext);
         var names = new[] { "Greeting", "Help", "SecretPrompt" };
 
-        var result = _strategy.FilterPrimitives(ctx, McpPrimitiveType.Prompt, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Prompt, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(3);
     }
@@ -177,26 +185,14 @@ public class OAuthClaimsFilteringStrategyTests
             new Claim("email", "user@example.com"),
         ], "test"));
 
-        var ctx = CreateHttpContext(principal);
+        var httpContext = CreateHttpContext(principal);
+        var strategy = CreateStrategy(httpContext);
         var names = new[] { "Greeting", "Help" };
 
-        var result = _strategy.FilterPrimitives(ctx, McpPrimitiveType.Prompt, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Prompt, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(0);
     }
-
-    [Test]
-    public async Task UnauthenticatedUser_ReturnsAllPromptsUnchanged()
-    {
-        var ctx = CreateHttpContext();
-        var names = new[] { "Greeting", "Help" };
-
-        var result = _strategy.FilterPrimitives(ctx, McpPrimitiveType.Prompt, names).ToList();
-
-        await Assert.That(result).Count().IsEqualTo(2);
-    }
-
-    // ── Cross-primitive isolation ──
 
     [Test]
     public async Task ToolScope_DoesNotGrantResourceAccess()
@@ -206,11 +202,12 @@ public class OAuthClaimsFilteringStrategyTests
             new Claim("scope", "mcp.tools.all"),
         ], "test"));
 
-        var ctx = CreateHttpContext(principal);
+        var httpContext = CreateHttpContext(principal);
+        var strategy = CreateStrategy(httpContext);
 
-        var toolResult = _strategy.FilterPrimitives(ctx, McpPrimitiveType.Tool,
+        var toolResult = strategy.FilterPrimitives(McpPrimitiveType.Tool,
             new[] { "GetRandomNumber", "Echo" }).ToList();
-        var resourceResult = _strategy.FilterPrimitives(ctx, McpPrimitiveType.Resource,
+        var resourceResult = strategy.FilterPrimitives(McpPrimitiveType.Resource,
             new[] { "Server Info" }).ToList();
 
         await Assert.That(toolResult).Count().IsEqualTo(2);

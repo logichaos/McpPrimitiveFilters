@@ -27,6 +27,11 @@
                 <Source>.*\\tests\\.*</Source>
                 <Source>.*\\samples\\.*</Source>
                 <Source>.*\\**\\Program.cs</Source>
+                <Source>.*\\**\\.*\.g\.cs</Source>
+                <Source>.*\\**\\\.*AssemblyInfo\.cs</Source>
+                <Source>.*\\**\\\.*GlobalUsings.*\.cs</Source>
+                <Source>.*\\**\\MicrosoftTestingPlatformEntryPoint\.cs</Source>
+                <Source>.*\\**\\SelfRegisteredExtensions\.cs</Source>
               </Exclude>
             </Sources>
 

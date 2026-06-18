@@ -15,7 +15,12 @@
           ".*\\\\samples\\\\.*",
           ".*\\\\tests\\\\.*",
           ".*\\\\artifacts\\\\.*",
-          ".*\\\\Program.cs"
+          ".*\\\\Program.cs",
+          ".*\\\\.g\\\\.cs$",
+          ".*AssemblyInfo\\\\.cs$",
+          ".*GlobalUsings.*\\\\.cs$",
+          ".*MicrosoftTestingPlatformEntryPoint\\\\.cs$",
+          ".*SelfRegisteredExtensions\\\\.cs$"
         ]
       }
     }

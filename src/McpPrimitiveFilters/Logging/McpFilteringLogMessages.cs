@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace McpPrimitiveFilters.Logging;
 
+[ExcludeFromCodeCoverage]
 internal static partial class McpFilteringLogMessages
 {
     [LoggerMessage(Level = LogLevel.Debug,

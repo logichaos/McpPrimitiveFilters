@@ -3,20 +3,19 @@ namespace McpPrimitiveFilters;
 public abstract class McpPrimitiveFilteringStrategy
 {
     public IEnumerable<string> FilterPrimitives(
-        HttpContext httpContext,
         McpPrimitiveType type,
         IEnumerable<string> names)
     {
         return type switch
         {
-            McpPrimitiveType.Tool     => FilterTools(httpContext, names),
-            McpPrimitiveType.Resource => FilterResources(httpContext, names),
-            McpPrimitiveType.Prompt   => FilterPrompts(httpContext, names),
+            McpPrimitiveType.Tool     => FilterTools(names),
+            McpPrimitiveType.Resource => FilterResources(names),
+            McpPrimitiveType.Prompt   => FilterPrompts(names),
             _ => throw new ArgumentOutOfRangeException(nameof(type))
         };
     }
 
-    protected virtual IEnumerable<string> FilterTools(HttpContext httpContext, IEnumerable<string> names) => names;
-    protected virtual IEnumerable<string> FilterResources(HttpContext httpContext, IEnumerable<string> names) => names;
-    protected virtual IEnumerable<string> FilterPrompts(HttpContext httpContext, IEnumerable<string> names) => names;
+    protected virtual IEnumerable<string> FilterTools(IEnumerable<string> names) => names;
+    protected virtual IEnumerable<string> FilterResources(IEnumerable<string> names) => names;
+    protected virtual IEnumerable<string> FilterPrompts(IEnumerable<string> names) => names;
 }

@@ -16,7 +16,8 @@ public static partial class ApiBuilder
       {
         options.Capabilities = new ServerCapabilities
         {
-          Logging = new LoggingCapability()
+          Logging = new LoggingCapability(),
+          Prompts = new PromptsCapability { ListChanged = false }
         };
       })
       .WithHttpTransport(opts => opts.Stateless = true);

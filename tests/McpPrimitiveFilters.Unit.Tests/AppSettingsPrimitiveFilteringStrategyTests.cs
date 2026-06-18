@@ -1,13 +1,11 @@
 using McpPrimitiveFilters;
 using McpPrimitiveFilters.Strategies;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
-namespace McpServer.Unit.Tests.McpPrimitiveFilters;
+namespace McpPrimitiveFilters.Unit.Tests;
 
 public class AppSettingsPrimitiveFilteringStrategyTests
 {
-    private static DefaultHttpContext EmptyContext => new();
 
     private static IConfiguration CreateConfiguration(string? json)
     {
@@ -16,8 +14,6 @@ public class AppSettingsPrimitiveFilteringStrategyTests
             builder.AddJsonStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json)));
         return builder.Build();
     }
-
-    // ── Tools ──
 
     [Test]
     public async Task AllowedTools_ContainsSubset_ReturnsOnlyMatchingTools()
@@ -35,7 +31,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
         var names = new[] { "GetRandomNumber", "Echo", "GetTimestamp", "ListUsers", "GetServerStats" };
 
-        var result = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Tool, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(2);
         await Assert.That(result).Contains("GetRandomNumber");
@@ -52,7 +48,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
         var names = new[] { "GetRandomNumber", "Echo" };
 
-        var result = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Tool, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(2);
     }
@@ -67,7 +63,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
         var names = new[] { "GetRandomNumber", "Echo" };
 
-        var result = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Tool, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(2);
     }
@@ -82,7 +78,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
         var names = new[] { "GetRandomNumber", "Echo" };
 
-        var result = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Tool, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(1);
         await Assert.That(result).Contains("GetRandomNumber");
@@ -98,12 +94,10 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
         var names = new[] { "GetRandomNumber", "Echo" };
 
-        var result = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Tool, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(0);
     }
-
-    // ── Resources ──
 
     [Test]
     public async Task AllowedResources_ContainsSubset_ReturnsOnlyMatchingResources()
@@ -115,7 +109,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
         var names = new[] { "Server Info", "City Weather", "Process Info", "Current Time" };
 
-        var result = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Resource, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(2);
         await Assert.That(result).Contains("Server Info");
@@ -132,7 +126,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
         var names = new[] { "Server Info", "Process Info" };
 
-        var result = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Resource, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(2);
     }
@@ -147,7 +141,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
         var names = new[] { "Server Info", "Process Info" };
 
-        var result = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Resource, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(2);
     }
@@ -162,13 +156,11 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
         var names = new[] { "Server Info", "Process Info" };
 
-        var result = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Resource, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(1);
         await Assert.That(result).Contains("Server Info");
     }
-
-    // ── Prompts ──
 
     [Test]
     public async Task AllowedPrompts_ContainsSubset_ReturnsOnlyMatchingPrompts()
@@ -180,7 +172,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
         var names = new[] { "Greeting", "Help", "SecretPrompt" };
 
-        var result = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Prompt, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Prompt, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(2);
         await Assert.That(result).Contains("Greeting");
@@ -197,12 +189,10 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
         var names = new[] { "Greeting", "Help" };
 
-        var result = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Prompt, names).ToList();
+        var result = strategy.FilterPrimitives(McpPrimitiveType.Prompt, names).ToList();
 
         await Assert.That(result).Count().IsEqualTo(2);
     }
-
-    // ── Cross-primitive isolation ──
 
     [Test]
     public async Task AllowedTools_DoesNotAffectResources()
@@ -213,9 +203,9 @@ public class AppSettingsPrimitiveFilteringStrategyTests
 
         var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
 
-        var toolResult = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Tool,
+        var toolResult = strategy.FilterPrimitives(McpPrimitiveType.Tool,
             new[] { "MyTool", "OtherTool" }).ToList();
-        var resourceResult = strategy.FilterPrimitives(EmptyContext, McpPrimitiveType.Resource,
+        var resourceResult = strategy.FilterPrimitives(McpPrimitiveType.Resource,
             new[] { "MyResource", "OtherResource" }).ToList();
 
         await Assert.That(toolResult).Count().IsEqualTo(1);

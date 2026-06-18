@@ -11,13 +11,13 @@ public sealed class AppSettingsPrimitiveFilteringStrategy : McpPrimitiveFilterin
     public AppSettingsPrimitiveFilteringStrategy(IConfiguration configuration)
         => _configuration = configuration;
 
-    protected override IEnumerable<string> FilterTools(HttpContext httpContext, IEnumerable<string> names)
+    protected override IEnumerable<string> FilterTools(IEnumerable<string> names)
         => ApplyAllowlist("McpFiltering:Allowed:tools", names);
 
-    protected override IEnumerable<string> FilterResources(HttpContext httpContext, IEnumerable<string> names)
+    protected override IEnumerable<string> FilterResources(IEnumerable<string> names)
         => ApplyAllowlist("McpFiltering:Allowed:resources", names);
 
-    protected override IEnumerable<string> FilterPrompts(HttpContext httpContext, IEnumerable<string> names)
+    protected override IEnumerable<string> FilterPrompts(IEnumerable<string> names)
         => ApplyAllowlist("McpFiltering:Allowed:prompts", names);
 
     private IEnumerable<string> ApplyAllowlist(string configKey, IEnumerable<string> names)

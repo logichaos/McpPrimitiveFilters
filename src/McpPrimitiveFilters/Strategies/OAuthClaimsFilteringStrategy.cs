@@ -4,25 +4,32 @@ namespace McpPrimitiveFilters.Strategies;
 
 public sealed class OAuthClaimsFilteringStrategy : McpPrimitiveFilteringStrategy
 {
+    private readonly IHttpContextAccessor _httpAccessor;
     private readonly ILogger<OAuthClaimsFilteringStrategy> _logger;
 
-    public OAuthClaimsFilteringStrategy(ILogger<OAuthClaimsFilteringStrategy> logger)
-        => _logger = logger;
+    public OAuthClaimsFilteringStrategy(
+        IHttpContextAccessor httpAccessor,
+        ILogger<OAuthClaimsFilteringStrategy> logger)
+    {
+        _httpAccessor = httpAccessor;
+        _logger = logger;
+    }
 
-    protected override IEnumerable<string> FilterTools(HttpContext ctx, IEnumerable<string> names)
-        => FilterByScope(ctx, McpPrimitiveType.Tool, names, "mcp.tool.", "mcp.tools.all");
+    protected override IEnumerable<string> FilterTools(IEnumerable<string> names)
+        => FilterByScope(McpPrimitiveType.Tool, names, "mcp.tool.", "mcp.tools.all");
 
-    protected override IEnumerable<string> FilterResources(HttpContext ctx, IEnumerable<string> names)
-        => FilterByScope(ctx, McpPrimitiveType.Resource, names, "mcp.resource.", "mcp.resources.all");
+    protected override IEnumerable<string> FilterResources(IEnumerable<string> names)
+        => FilterByScope(McpPrimitiveType.Resource, names, "mcp.resource.", "mcp.resources.all");
 
-    protected override IEnumerable<string> FilterPrompts(HttpContext ctx, IEnumerable<string> names)
-        => FilterByScope(ctx, McpPrimitiveType.Prompt, names, "mcp.prompt.", "mcp.prompts.all");
+    protected override IEnumerable<string> FilterPrompts(IEnumerable<string> names)
+        => FilterByScope(McpPrimitiveType.Prompt, names, "mcp.prompt.", "mcp.prompts.all");
 
     private IEnumerable<string> FilterByScope(
-        HttpContext ctx, McpPrimitiveType type,
+        McpPrimitiveType type,
         IEnumerable<string> names, string scopePrefix, string allScope)
     {
-        if (ctx.User.Identity?.IsAuthenticated != true)
+        var ctx = _httpAccessor.HttpContext;
+        if (ctx?.User.Identity?.IsAuthenticated != true)
         {
             McpFilteringLogMessages.NotAuthenticated(_logger, type, names.Count());
             return names;
