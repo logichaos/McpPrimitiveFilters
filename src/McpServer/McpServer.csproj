@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\McpServer.Core\McpServer.Core.csproj" />
+    <ProjectReference Include="..\McpAuthorizationFiltering\McpAuthorizationFiltering.csproj" />
   </ItemGroup>
 
 </Project>

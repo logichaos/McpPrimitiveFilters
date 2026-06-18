@@ -20,10 +20,9 @@ builder.Services
     toolSerializerOptions.TypeInfoResolverChain.Add(McpToolsJsonContext.Default);
 
     mcp.WithTools<RandomNumberTools>(toolSerializerOptions)
-       .WithResources<DemoResources>();
-  })
-  .AddToolFiltering()
-  .AddResourceFiltering();
+       .WithResources<DemoResources>()
+       .AddMcpAuthorizationFiltering();
+  });
 
 var app = builder.Build();
 
