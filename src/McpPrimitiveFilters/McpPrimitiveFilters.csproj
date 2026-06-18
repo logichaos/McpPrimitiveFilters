@@ -4,14 +4,14 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>McpAuthorizationFiltering</RootNamespace>
+    <RootNamespace>McpPrimitiveFilters</RootNamespace>
 
     <!-- NuGet packaging -->
-    <PackageId>McpAuthorizationFiltering</PackageId>
+    <PackageId>McpPrimitiveFilters</PackageId>
     <PackageVersion>0.1.0-beta</PackageVersion>
     <Authors>zephy</Authors>
-    <Description>Pluggable tool, resource, and prompt authorization filtering for MCP servers. Filter by OAuth scope claims or appsettings allowlists.</Description>
-    <PackageTags>AI;MCP;server;filtering;oauth;authorization;tools;resources;prompts</PackageTags>
+    <Description>Pluggable authorization filtering for MCP server tools, resources, and prompts. Filter by OAuth scope claims or appsettings allowlists.</Description>
+    <PackageTags>AI;MCP;server;filtering;oauth;authorization;tools;resources;prompts;primitive</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/zephy/AuthenticatedHttpMcpServer</PackageProjectUrl>
@@ -20,7 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="McpServer.Unit.Tests" />
+    <InternalsVisibleTo Include="McpPrimitiveFilters.Unit.Tests" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,4 @@
-namespace McpAuthorizationFiltering;
+namespace McpPrimitiveFilters;
 
 public enum McpPrimitiveType
 {

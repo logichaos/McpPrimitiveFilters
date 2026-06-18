@@ -1,7 +1,6 @@
-using System.Security.Claims;
-using McpAuthorizationFiltering.Logging;
+using McpPrimitiveFilters.Logging;
 
-namespace McpAuthorizationFiltering.Strategies;
+namespace McpPrimitiveFilters.Strategies;
 
 public sealed class OAuthClaimsFilteringStrategy : McpPrimitiveFilteringStrategy
 {

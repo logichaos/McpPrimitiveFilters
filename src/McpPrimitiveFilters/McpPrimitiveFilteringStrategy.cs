@@ -1,4 +1,4 @@
-namespace McpAuthorizationFiltering;
+namespace McpPrimitiveFilters;
 
 public abstract class McpPrimitiveFilteringStrategy
 {

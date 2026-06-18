@@ -21,7 +21,7 @@ builder.Services
 
     mcp.WithTools<RandomNumberTools>(toolSerializerOptions)
        .WithResources<DemoResources>()
-       .AddMcpAuthorizationFiltering();
+       .AddMcpPrimitiveFilters();
   });
 
 var app = builder.Build();

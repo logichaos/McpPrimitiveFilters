@@ -1,21 +1,21 @@
-using McpAuthorizationFiltering;
-using McpAuthorizationFiltering.Logging;
-using McpAuthorizationFiltering.Strategies;
-using Microsoft.Extensions.DependencyInjection;
+using McpPrimitiveFilters;
+using McpPrimitiveFilters.Logging;
+using McpPrimitiveFilters.Strategies;
+
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using ModelContextProtocol;
+
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
-public static class McpAuthorizationFilteringExtensions
+public static class McpPrimitiveFiltersExtensions
 {
-    public static IMcpServerBuilder AddMcpAuthorizationFiltering(
+    public static IMcpServerBuilder AddMcpPrimitiveFilters(
         this IMcpServerBuilder builder,
-        Action<McpAuthorizationFilteringOptions>? configure = null)
+        Action<McpPrimitiveFiltersOptions>? configure = null)
     {
-        var options = new McpAuthorizationFilteringOptions();
+        var options = new McpPrimitiveFiltersOptions();
         configure?.Invoke(options);
 
         builder.Services.AddHttpContextAccessor();
@@ -60,7 +60,7 @@ public static class McpAuthorizationFilteringExtensions
                 {
                     var httpContextAccessor = context.Services?.GetService<IHttpContextAccessor>();
                     var strategies = context.Services?.GetServices<McpPrimitiveFilteringStrategy>();
-                    var logger = context.Services?.GetService<ILoggerFactory>()?.CreateLogger("McpAuthorizationFiltering");
+                    var logger = context.Services?.GetService<ILoggerFactory>()?.CreateLogger("McpPrimitiveFilters");
 
                     if (httpContextAccessor?.HttpContext is { } httpContext
                         && strategies is not null
@@ -143,7 +143,7 @@ public static class McpAuthorizationFilteringExtensions
                 {
                     var httpContextAccessor = context.Services?.GetService<IHttpContextAccessor>();
                     var strategies = context.Services?.GetServices<McpPrimitiveFilteringStrategy>();
-                    var logger = context.Services?.GetService<ILoggerFactory>()?.CreateLogger("McpAuthorizationFiltering");
+                    var logger = context.Services?.GetService<ILoggerFactory>()?.CreateLogger("McpPrimitiveFilters");
 
                     if (httpContextAccessor?.HttpContext is { } httpContext
                         && strategies is not null

@@ -1,6 +1,6 @@
-namespace McpAuthorizationFiltering;
+namespace McpPrimitiveFilters;
 
-public class McpAuthorizationFilteringOptions
+public class McpPrimitiveFiltersOptions
 {
     public bool AppSettingsEnabled { get; set; } = true;
     public bool OAuthClaimsEnabled { get; set; } = true;

@@ -1,13 +1,13 @@
-using McpAuthorizationFiltering;
+using McpPrimitiveFilters;
 
-namespace McpServer.Unit.Tests.McpAuthorizationFiltering;
+namespace McpServer.Unit.Tests.McpPrimitiveFilters;
 
-public class McpAuthorizationFilteringOptionsTests
+public class McpPrimitiveFiltersOptionsTests
 {
     [Test]
     public async Task DefaultOptions_HasExpectedValues()
     {
-        var options = new McpAuthorizationFilteringOptions();
+        var options = new McpPrimitiveFiltersOptions();
 
         await Assert.That(options.AppSettingsEnabled).IsTrue();
         await Assert.That(options.OAuthClaimsEnabled).IsTrue();
@@ -19,7 +19,7 @@ public class McpAuthorizationFilteringOptionsTests
     [Test]
     public async Task Options_CanDisableAllFiltering()
     {
-        var options = new McpAuthorizationFilteringOptions
+        var options = new McpPrimitiveFiltersOptions
         {
             AppSettingsEnabled = false,
             OAuthClaimsEnabled = false,
@@ -36,7 +36,7 @@ public class McpAuthorizationFilteringOptionsTests
     [Test]
     public async Task Options_EnablePrompts()
     {
-        var options = new McpAuthorizationFilteringOptions
+        var options = new McpPrimitiveFiltersOptions
         {
             FilterPrompts = true
         };

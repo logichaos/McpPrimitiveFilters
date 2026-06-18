@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 
-namespace McpAuthorizationFiltering.Strategies;
+namespace McpPrimitiveFilters.Strategies;
 
 public sealed class AppSettingsPrimitiveFilteringStrategy : McpPrimitiveFilteringStrategy
 {

@@ -1,7 +1,7 @@
-using McpAuthorizationFiltering;
+using McpPrimitiveFilters;
 using Microsoft.AspNetCore.Http;
 
-namespace McpServer.Unit.Tests.McpAuthorizationFiltering;
+namespace McpServer.Unit.Tests.McpPrimitiveFilters;
 
 public class McpPrimitiveFilteringStrategyTests
 {

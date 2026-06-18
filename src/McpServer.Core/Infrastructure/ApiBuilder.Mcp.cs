@@ -2,7 +2,6 @@ using Microsoft.Net.Http.Headers;
 
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
-using ModelContextProtocol.Server;
 
 namespace McpServer.Infrastructure;
 public static partial class ApiBuilder

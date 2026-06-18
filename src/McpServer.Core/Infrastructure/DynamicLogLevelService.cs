@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 using ModelContextProtocol.Protocol;
 
 namespace McpServer.Infrastructure;

@@ -1,4 +1,4 @@
-# McpAuthorizationFiltering
+# McpPrimitiveFilters
 
 Pluggable authorization filtering for MCP server tools, resources, and prompts.
 One extension method call and you get OAuth scope-based filtering and
@@ -7,7 +7,7 @@ appsettings allowlists — for all three primitive types.
 ## Installation
 
 ```bash
-dotnet add package McpAuthorizationFiltering
+dotnet add package McpPrimitiveFilters
 ```
 
 ## Quick Start
@@ -19,7 +19,7 @@ services.AddMcpServer()
     .WithHttpTransport(opts => opts.Stateless = true)
     .WithTools<MyTools>()
     .WithResources<MyResources>()
-    .AddMcpAuthorizationFiltering();
+    .AddMcpPrimitiveFilters();
 ```
 
 ## Configuration
@@ -54,7 +54,7 @@ strategies to be visible or invocable.
 ## Options
 
 ```csharp
-.AddMcpAuthorizationFiltering(options =>
+.AddMcpPrimitiveFilters(options =>
 {
     options.AppSettingsEnabled = false;   // disable appsettings strategy
     options.OAuthClaimsEnabled = true;
@@ -73,7 +73,7 @@ strategies to be visible or invocable.
 ## Custom Strategies
 
 Implement `McpPrimitiveFilteringStrategy` and register it before calling
-`AddMcpAuthorizationFiltering()`:
+`AddMcpPrimitiveFilters()`:
 
 ```csharp
 public sealed class MyFilter : McpPrimitiveFilteringStrategy
@@ -85,7 +85,7 @@ public sealed class MyFilter : McpPrimitiveFilteringStrategy
 
 // Register before the library call — AND-composed with built-in strategies
 builder.Services.AddSingleton<McpPrimitiveFilteringStrategy, MyFilter>();
-builder.AddMcpAuthorizationFiltering();
+builder.AddMcpPrimitiveFilters();
 ```
 
 ## How It Works

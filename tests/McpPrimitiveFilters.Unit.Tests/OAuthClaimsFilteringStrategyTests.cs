@@ -1,10 +1,10 @@
 using System.Security.Claims;
-using McpAuthorizationFiltering;
-using McpAuthorizationFiltering.Strategies;
+using McpPrimitiveFilters;
+using McpPrimitiveFilters.Strategies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace McpServer.Unit.Tests.McpAuthorizationFiltering;
+namespace McpServer.Unit.Tests.McpPrimitiveFilters;
 
 public class OAuthClaimsFilteringStrategyTests
 {

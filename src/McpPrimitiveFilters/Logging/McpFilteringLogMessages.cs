@@ -1,4 +1,4 @@
-namespace McpAuthorizationFiltering.Logging;
+namespace McpPrimitiveFilters.Logging;
 
 internal static partial class McpFilteringLogMessages
 {
