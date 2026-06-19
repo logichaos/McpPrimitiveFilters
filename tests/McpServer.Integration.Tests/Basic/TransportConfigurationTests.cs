@@ -12,8 +12,6 @@ public class TransportConfigurationTests
   [ClassDataSource<DefaultWebApplicationFactory>(Shared = SharedType.PerTestSession)]
   public required DefaultWebApplicationFactory HttpFactory { get; init; }
 
-  // ── HTTP transport (default for "Testing" environment) ──
-
   private static async Task<McpClient> CreateMcpClientAsync(HttpClient httpClient)
   {
     var transport = new HttpClientTransport(

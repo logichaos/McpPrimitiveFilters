@@ -48,7 +48,7 @@ public class ToolFilteringTests
   public async Task NoFilteringConfigured_ListToolsReturnsAllTools()
   {
     // Uses the standard WebApplicationFactory with no AllowedTools config
-    await using var factory = new ToolFilteringWebApplicationFactory(); // null = no config
+    await using var factory = new ToolFilteringWebApplicationFactory();
                                                                         // Default to "Testing" environment which has no AllowedTools
 
     var mcpServer = factory.CreateClient();

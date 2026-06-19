@@ -26,10 +26,6 @@ public class ToolsListAndInvokeTests
     return await McpClient.CreateAsync(transport);
   }
 
-  // ──────────────────────────────────────────────────────────
-  // Tool discovery
-  // ──────────────────────────────────────────────────────────
-
   [Test]
   public async Task McpClient_DiscoversAllDemoTools()
   {
@@ -43,12 +39,8 @@ public class ToolsListAndInvokeTests
     await Assert.That(toolNames).Contains("echo");
     await Assert.That(toolNames).Contains("list_users");
     await Assert.That(toolNames).Contains("get_server_stats");
-    await Assert.That(toolNames).Contains("get_random_number"); // existing tool still present
+    await Assert.That(toolNames).Contains("get_random_number");
   }
-
-  // ──────────────────────────────────────────────────────────
-  // GetTimestamp
-  // ──────────────────────────────────────────────────────────
 
   [Test]
   public async Task GetTimestamp_ReturnsIso8601()
@@ -61,10 +53,6 @@ public class ToolsListAndInvokeTests
 
     await Assert.That(DateTimeOffset.TryParse(text, out _)).IsTrue();
   }
-
-  // ──────────────────────────────────────────────────────────
-  // Echo
-  // ──────────────────────────────────────────────────────────
 
   [Test]
   public async Task Echo_ReturnsInputMessage()
@@ -81,10 +69,6 @@ public class ToolsListAndInvokeTests
     await Assert.That(text).IsEqualTo("Hello, Integration Test!");
   }
 
-  // ──────────────────────────────────────────────────────────
-  // ListUsers
-  // ──────────────────────────────────────────────────────────
-
   [Test]
   public async Task ListUsers_ReturnsUserList()
   {
@@ -95,13 +79,8 @@ public class ToolsListAndInvokeTests
     var text = result.Content[0].ToString();
 
     await Assert.That(text).IsNotNull().And.IsNotEmpty();
-    // Should contain known demo usernames
     await Assert.That(text).Contains("alice").And.Contains("admin");
   }
-
-  // ──────────────────────────────────────────────────────────
-  // GetServerStats
-  // ──────────────────────────────────────────────────────────
 
   [Test]
   public async Task GetServerStats_ReturnsStats()

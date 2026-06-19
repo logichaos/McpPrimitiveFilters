@@ -12,8 +12,6 @@ public class DemoPromptsTests
 {
   private readonly DemoPrompts _sut = new();
 
-  // ── Attributes ──────────────────────────────────────────────────────
-
   [Test]
   public async Task Class_HasMcpServerPromptTypeAttribute()
   {
@@ -56,8 +54,6 @@ public class DemoPromptsTests
     await Assert.That(attr!.Name).IsEqualTo("explain-concept");
   }
 
-  // ── Return values ────────────────────────────────────────────────────
-
   [Test]
   public async Task Greeting_ReturnsNonEmptyString()
   {
@@ -85,8 +81,6 @@ public class DemoPromptsTests
     var result = _sut.ExplainConcept();
     await Assert.That(result).IsNotNull().And.IsNotEmpty();
   }
-
-  // ── Methods exist ────────────────────────────────────────────────────
 
   [Test]
   public async Task AllPromptMethods_ReturnString()

@@ -4,10 +4,8 @@ using TUnit.AspNetCore;
 
 namespace McpServer.Integration.Tests.Infrastructure.Factories;
 
-/// <summary>
-/// Uses the "RateLimitTesting" environment: OAuth disabled, rate limiting
-/// enabled with 1-second windows so counters reset between tests.
-/// </summary>
+// 1-second rate limit windows so counters reset between tests.
+// OAuth disabled to avoid authentication overhead.
 public class RateLimitingWebApplicationFactory : TestWebApplicationFactory<Program>
 {
   protected override void ConfigureWebHost(IWebHostBuilder builder)

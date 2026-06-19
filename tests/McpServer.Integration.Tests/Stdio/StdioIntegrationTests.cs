@@ -15,10 +15,9 @@ public class StdioIntegrationTests : IAsyncInitializer
   private static string ResolveMcpServerDll()
   {
     var testDll = typeof(StdioIntegrationTests).Assembly.Location;
-    // Test DLL: artifacts/bin/McpServer.Integration.Tests/debug/<name>.dll
-    // Target:   artifacts/bin/McpServer/debug/McpServer.dll
+    var configuration = Path.GetFileName(Path.GetDirectoryName(testDll)!);
     var binDir = Path.GetFullPath(Path.Combine(testDll, "..", "..", ".."));
-    return Path.Combine(binDir, "McpServer", "debug", "McpServer.dll");
+    return Path.Combine(binDir, "McpServer", configuration, "McpServer.dll");
   }
 
   public async Task InitializeAsync()

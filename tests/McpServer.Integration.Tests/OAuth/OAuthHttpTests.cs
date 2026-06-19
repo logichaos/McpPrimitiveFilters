@@ -3,36 +3,19 @@ using System.Text;
 
 namespace McpServer.Integration.Tests.OAuth;
 
-/// <summary>
-/// Integration tests that verify the OAuth pipeline using the
-/// OAuthWebApplicationFactory (shared factory approach with OAuth enabled).
-///
-/// For full end-to-end OAuth flow tests (authorization redirect, PKCE,
-/// token refresh, scope selection), see OAuthFlowTests which uses the
-/// KestrelInMemoryTest approach.
-/// </summary>
 public class OAuthHttpTests
 {
   [ClassDataSource<OAuthWebApplicationFactory>(Shared = SharedType.PerTestSession)]
   public required OAuthWebApplicationFactory Factory { get; init; }
-
-  // ──────────────────────────────────────────────────────────────
-  // Smoke: app starts successfully with OAuth enabled
-  // ──────────────────────────────────────────────────────────────
 
   [Test]
   public async Task AppStarts_WithOAuthEnabled()
   {
     var client = Factory.CreateClient();
 
-    // The root endpoint is not behind auth, so it should still work
     var response = await client.GetAsync("/");
     await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
   }
-
-  // ──────────────────────────────────────────────────────────────
-  // 401 without authentication
-  // ──────────────────────────────────────────────────────────────
 
   [Test]
   public async Task McpEndpoint_Returns401_WithoutToken()
@@ -71,10 +54,6 @@ public class OAuthHttpTests
 
     await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
   }
-
-  // ──────────────────────────────────────────────────────────────
-  // Protected Resource Metadata endpoint
-  // ──────────────────────────────────────────────────────────────
 
   [Test]
   public async Task ProtectedResourceMetadata_Returns200()

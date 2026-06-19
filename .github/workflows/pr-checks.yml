@@ -29,7 +29,8 @@ jobs:
             --configuration Release \
             --results-directory artifacts/TestResults \
             --coverage \
-            --coverage-output-format cobertura
+            --coverage-output-format cobertura \
+            --coverage-settings .runsettings
 
       - name: Generate Coverage Reports
         if: always()
@@ -41,7 +42,7 @@ jobs:
             -targetdir:"artifacts/coverage_report" \
             -reporttypes:"MarkdownSummary;Cobertura" \
             -assemblyfilters:"-*McpServer*;-*SampleMcp*;-*TestOAuth*" \
-            -filefilters:"-*Program.cs"
+            -filefilters:"-*Program.cs;-*.g.cs;-*GlobalUsings*.cs"
 
       - name: Write Coverage Report to Summary
         run: cat artifacts/coverage_report/Summary.md >> $GITHUB_STEP_SUMMARY
