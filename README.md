@@ -12,9 +12,9 @@
 
 ## tl;dr
 
-- This repo contains a library that can 
-- This repo contains my implementation of an http MCP server, built on top of the [modelcontextprotocol/csharp-sdk](https://github.com/modelcontextprotocol/csharp-sdk), where the exposed tools and resources can be controlled. So you can expose only selected tools/resources from the server, depending on your need or authorization from an enterprise OAuth server.
-
+- This repo contains a library that can be used to add filtering capabilities to an MCP server.
+  - you can filter the list of tools, resources, and prompts.
+- You can implement your own McpPrimitiveFilterStrategy
 ## What is inside
 
 - A copy of the TestOAuthServer from the csharp-sdk tests, with modifications to show how to control what tools and resources are accessible using scope claims returned by the server.
