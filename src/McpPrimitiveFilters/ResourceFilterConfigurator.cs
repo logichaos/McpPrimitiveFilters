@@ -5,26 +5,16 @@ using ModelContextProtocol.Server;
 
 namespace McpPrimitiveFilters;
 
-internal sealed class ResourceFilterConfigurator : IConfigureOptions<McpServerOptions>
+internal sealed class ResourceFilterConfigurator : McpPrimitiveFilterConfigurator
 {
-    private readonly McpPrimitiveFilteringStrategy[] _strategies;
-    private readonly McpPrimitiveFiltersOptions _options;
-    private readonly ILogger _logger;
-
     public ResourceFilterConfigurator(
         IEnumerable<McpPrimitiveFilteringStrategy> strategies,
         IOptions<McpPrimitiveFiltersOptions> options,
         ILoggerFactory loggerFactory)
-    {
-        _strategies = [.. strategies];
-        _options = options.Value;
-        _logger = loggerFactory.CreateLogger($"{nameof(McpPrimitiveFilters)}.Resources");
-    }
+        : base(strategies, options, loggerFactory, options.Value.FilterResources, "Resources") { }
 
-    public void Configure(McpServerOptions o)
+    protected override void RegisterFilters(McpServerOptions o)
     {
-        if (!_options.FilterResources) return;
-
         o.Filters.Request.ListResourcesFilters.Add(ListResources);
         o.Filters.Request.ListResourceTemplatesFilters.Add(ListResourceTemplates);
         o.Filters.Request.ReadResourceFilters.Add(ReadResource);
@@ -35,7 +25,7 @@ internal sealed class ResourceFilterConfigurator : IConfigureOptions<McpServerOp
     {
         var r = await next(c, ct);
         if (r.Resources is { Count: > 0 })
-            r.Resources = FilterByName(McpPrimitiveType.Resource, r.Resources, x => x.Name);
+            r.Resources = FilterByName(McpPrimitiveType.Resource, "list", r.Resources, x => x.Name);
         return r;
     };
 
@@ -44,7 +34,8 @@ internal sealed class ResourceFilterConfigurator : IConfigureOptions<McpServerOp
     {
         var r = await next(c, ct);
         if (r.ResourceTemplates is { Count: > 0 })
-            r.ResourceTemplates = FilterByName(McpPrimitiveType.Resource, r.ResourceTemplates, x => x.Name);
+            r.ResourceTemplates = FilterByName(
+                McpPrimitiveType.Resource, "list", r.ResourceTemplates, x => x.Name);
         return r;
     };
 
@@ -53,7 +44,8 @@ internal sealed class ResourceFilterConfigurator : IConfigureOptions<McpServerOp
     {
         if (c.Params?.Uri is not { } uri) return await next(c, ct);
         var name = ResolveResourceName(c.Services, uri);
-        if (name is null || Allows(name, McpPrimitiveType.Resource)) return await next(c, ct);
+        if (name is null || Allows(name, McpPrimitiveType.Resource, "read"))
+            return await next(c, ct);
         return new ReadResourceResult
         {
             Contents = [new TextResourceContents
@@ -63,17 +55,6 @@ internal sealed class ResourceFilterConfigurator : IConfigureOptions<McpServerOp
             }]
         };
     };
-
-    private List<Resource> FilterByName(McpPrimitiveType type,
-        IList<Resource> items, Func<Resource, string> getName)
-        => McpPrimitiveFilterPipeline.Apply(type, "list", items, getName, _strategies, _logger);
-
-    private List<ResourceTemplate> FilterByName(McpPrimitiveType type,
-        IList<ResourceTemplate> items, Func<ResourceTemplate, string> getName)
-        => McpPrimitiveFilterPipeline.Apply(type, "list", items, getName, _strategies, _logger);
-
-    private bool Allows(string name, McpPrimitiveType type)
-        => McpPrimitiveFilterPipeline.Allows(name, type, "read", _strategies, _logger);
 
     private static string? ResolveResourceName(IServiceProvider? services, string uri)
     {
