@@ -24,9 +24,7 @@ public class ResourceFilteringWebApplicationFactory : WebApplicationFactory<Prog
             {
                 var dict = new Dictionary<string, string?>();
                 for (int i = 0; i < _allowedResources.Length; i++)
-                {
-                    dict[$"Mcp:AllowedResources:{i}"] = _allowedResources[i];
-                }
+                    dict[$"McpFiltering:Allowed:resources:{i}"] = _allowedResources[i];
                 config.AddInMemoryCollection(dict);
             });
         }

@@ -10,10 +10,14 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/McpServer.Core/McpServer.Core.csproj" />
-    <Project Path="src/McpServer/McpServer.csproj" />
+    <Project Path="src/McpPrimitiveFilters/McpPrimitiveFilters.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/McpServer.Core/McpServer.Core.csproj" />
+    <Project Path="samples/McpServer/McpServer.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/McpPrimitiveFilters.Unit.Tests/McpPrimitiveFilters.Unit.Tests.csproj" />
     <Project Path="tests/McpServer.Integration.Tests/McpServer.Integration.Tests.csproj" />
     <Project Path="tests/McpServer.Unit.Tests/McpServer.Unit.Tests.csproj" />
     <Project Path="tests/ModelContextProtocol.TestOAuthServer/ModelContextProtocol.TestOAuthServer.csproj" />

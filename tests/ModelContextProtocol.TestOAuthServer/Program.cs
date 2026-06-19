@@ -659,7 +659,7 @@ public sealed class Program
             ["jti"] = jwtId,
             ["iat"] = issuedAt.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture),
             ["exp"] = expiresAt.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture),
-            ["scope"] = new JsonArray(scopes.Select(s => JsonValue.Create(s)).ToArray<JsonNode?>())
+            ["scope"] = new JsonArray([.. scopes.Select(s => JsonValue.Create(s))])
         };
 
         // Create JWT token
