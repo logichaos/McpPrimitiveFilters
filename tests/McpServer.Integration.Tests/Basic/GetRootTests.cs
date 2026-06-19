@@ -1,9 +1,11 @@
-﻿namespace McpServer.Integration.Tests;
+﻿using McpServer.Integration.Tests.Infrastructure.Factories;
+
+namespace McpServer.Integration.Tests.Basic;
 
 public class GetRootTests
 {
-  [ClassDataSource<WebApplicationFactory>(Shared = SharedType.PerTestSession)]
-  public required WebApplicationFactory WebApplicationFactory { get; init; }
+  [ClassDataSource<DefaultWebApplicationFactory>(Shared = SharedType.PerTestSession)]
+  public required DefaultWebApplicationFactory WebApplicationFactory { get; init; }
 
   [Test]
   public async Task Test()

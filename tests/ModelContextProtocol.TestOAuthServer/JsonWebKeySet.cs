@@ -7,9 +7,9 @@ namespace ModelContextProtocol.TestOAuthServer;
 /// </summary>
 internal sealed class JsonWebKeySet
 {
-    /// <summary>
-    /// Gets or sets the array of JSON Web Keys.
-    /// </summary>
-    [JsonPropertyName("keys")]
-    public required JsonWebKey[] Keys { get; init; }
+  /// <summary>
+  /// Gets or sets the array of JSON Web Keys.
+  /// </summary>
+  [JsonPropertyName("keys")]
+  public required JsonWebKey[] Keys { get; init; }
 }

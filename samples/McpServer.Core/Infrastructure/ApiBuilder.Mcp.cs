@@ -1,9 +1,12 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Microsoft.Net.Http.Headers;
 
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 
 namespace McpServer.Infrastructure;
+
 public static partial class ApiBuilder
 {
   public static IServiceCollection AddMcp(
@@ -11,6 +14,10 @@ public static partial class ApiBuilder
       IConfiguration configuration,
       Action<IMcpServerBuilder>? configureMcp = null)
   {
+    var transport = configuration.GetValue<string>("MCP:Transport") ?? "http";
+    var isHttp = transport is "http" or "both";
+    var isStdio = transport is "stdio" or "both";
+
     var builder = services
       .AddMcpServer(options =>
       {
@@ -19,8 +26,17 @@ public static partial class ApiBuilder
           Logging = new LoggingCapability(),
           Prompts = new PromptsCapability { ListChanged = false }
         };
-      })
-      .WithHttpTransport(opts => opts.Stateless = true);
+      });
+
+    if (isHttp)
+    {
+      builder.WithHttpTransport(opts => opts.Stateless = true);
+    }
+
+    if (isStdio)
+    {
+      builder.WithStdioServerTransport();
+    }
 
     configureMcp?.Invoke(builder);
 
@@ -44,7 +60,7 @@ public static partial class ApiBuilder
       });
 
     var oauthConfigured = services.Any(sd => sd.ServiceType == typeof(OAuthMarker));
-    if (!oauthConfigured)
+    if (!oauthConfigured && isHttp)
     {
       var allowedOrigins = configuration
           .GetSection("Mcp:AllowedOrigins")
@@ -64,9 +80,17 @@ public static partial class ApiBuilder
 
     return services;
   }
-  
+
   public static WebApplication UseMcp(this WebApplication app)
   {
+    var transport = app.Configuration.GetValue<string>("MCP:Transport") ?? "http";
+    var isHttp = transport is "http" or "both";
+
+    if (!isHttp)
+    {
+      return app;
+    }
+
     var endpoint = app.MapMcp();
 
     if (app.Services.IsOAuthConfigured())

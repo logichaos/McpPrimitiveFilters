@@ -16,6 +16,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="TUnit" />
+    <PackageReference Include="TUnit.AspNetCore" />
   </ItemGroup>
 
 </Project>

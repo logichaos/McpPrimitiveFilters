@@ -14,16 +14,16 @@ public record ServerStats(
 
 internal static partial class ToolLogMessages
 {
-    [LoggerMessage(Level = LogLevel.Information,
-        Message = "ListUsers: returned {Count} users")]
-    public static partial void LogListUsers(ILogger logger, int count);
+  [LoggerMessage(Level = LogLevel.Information,
+      Message = "ListUsers: returned {Count} users")]
+  public static partial void LogListUsers(ILogger logger, int count);
 
-    [LoggerMessage(Level = LogLevel.Information,
-        Message = "Server stats: Uptime={Uptime}, Requests={RequestCount}")]
-    public static partial void LogServerStats(
-        ILogger logger,
-        [SensitiveData] string uptime,
-        int requestCount);
+  [LoggerMessage(Level = LogLevel.Information,
+      Message = "Server stats: Uptime={Uptime}, Requests={RequestCount}")]
+  public static partial void LogServerStats(
+      ILogger logger,
+      [SensitiveData] string uptime,
+      int requestCount);
 }
 
 public class RandomNumberTools
