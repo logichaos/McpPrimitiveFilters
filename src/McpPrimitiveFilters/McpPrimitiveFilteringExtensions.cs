@@ -12,12 +12,22 @@ public static class McpPrimitiveFiltersExtensions
         this IServiceCollection services,
         Action<McpPrimitiveFiltersOptions>? configure = null)
     {
-        services.Configure(configure ?? (_ => { }));
+        var options = new McpPrimitiveFiltersOptions();
+        configure?.Invoke(options);
+        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(options));
 
-        services.TryAddSingleton<
-            McpPrimitiveFilteringStrategy, AppSettingsPrimitiveFilteringStrategy>();
-        services.TryAddSingleton<
-            McpPrimitiveFilteringStrategy, OAuthClaimsFilteringStrategy>();
+        services.AddHttpContextAccessor();
+
+        if (options.UseBuiltinAppSettingsFilteringStrategy)
+        {
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<
+                McpPrimitiveFilteringStrategy, AppSettingsPrimitiveFilteringStrategy>());
+        }
+        if (options.UseBuiltinOAuthClaimsFilteringStrategy)
+        {
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<
+                McpPrimitiveFilteringStrategy, OAuthClaimsFilteringStrategy>());
+        }
 
         services.AddSingleton<IConfigureOptions<McpServerOptions>, ToolFilterConfigurator>();
         services.AddSingleton<IConfigureOptions<McpServerOptions>, ResourceFilterConfigurator>();
