@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+
+using ModelContextProtocol.AspNetCore.Authentication;
 
 using TUnit.AspNetCore;
 
@@ -10,39 +13,48 @@ namespace McpServer.Integration.Tests.OAuth;
 public sealed class OAuthWebApplicationFactory
     : TestWebApplicationFactory<Program>
 {
-  [ClassDataSource<OAuthServerWebApplicationFactory>(Shared = SharedType.PerTestSession)]
-  public required OAuthServerWebApplicationFactory OAuthServer { get; init; }
+  private static readonly Lock PortLock = new();
+  private static int _nextPort = 18000;
+
+  public string OAuthAuthority { get; private set; } = null!;
 
   protected override void ConfigureWebHost(IWebHostBuilder builder)
   {
+    int port;
+    lock (PortLock)
+    {
+      port = _nextPort++;
+    }
+
+    OAuthAuthority = $"https://localhost:{port}";
+
     builder.UseEnvironment("Development");
 
-    var oauthBaseAddress = OAuthServer.Server.BaseAddress!;
-    var authority = oauthBaseAddress.ToString().TrimEnd('/');
+    builder.ConfigureAppConfiguration((_, config) =>
+    {
+      config.AddInMemoryCollection(new Dictionary<string, string?>
+      {
+        ["Mcp:OAuth:EmbeddedOAuthServer:Enabled"] = "true",
+        ["OAuthServer:Port"] = port.ToString(),
+      });
+    });
 
     builder.ConfigureServices(services =>
     {
       services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
-          {
-          options.Authority = authority;
-          options.Backchannel = CreateBackchannel();
-          options.TokenValidationParameters = new TokenValidationParameters
-          {
-            ValidAudience = "http://localhost",
-            ValidIssuer = authority,
-            NameClaimType = "name",
-            RoleClaimType = "roles"
-          };
-        });
-    });
-  }
+      {
+        options.Authority = OAuthAuthority;
+        options.TokenValidationParameters.ValidIssuer = OAuthAuthority;
+      });
 
-  private static HttpClient CreateBackchannel()
-  {
-    var handler = new SocketsHttpHandler
-    {
-      SslOptions = { RemoteCertificateValidationCallback = (_, _, _, _) => true }
-    };
-    return new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
+      services.Configure<McpAuthenticationOptions>(McpAuthenticationDefaults.AuthenticationScheme, options =>
+      {
+        if (options.ResourceMetadata is not null)
+        {
+          options.ResourceMetadata.AuthorizationServers.Clear();
+          options.ResourceMetadata.AuthorizationServers.Add(OAuthAuthority);
+        }
+      });
+    });
   }
 }

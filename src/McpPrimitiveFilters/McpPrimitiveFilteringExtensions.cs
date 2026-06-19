@@ -1,6 +1,7 @@
 using McpPrimitiveFilters;
 using McpPrimitiveFilters.Strategies;
 
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
@@ -10,6 +11,15 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class McpPrimitiveFiltersExtensions
 {
+  public static IServiceCollection AddMcpPrimitiveFilters(
+      this IServiceCollection services,
+      IConfiguration configuration,
+      Action<McpPrimitiveFiltersOptions>? configure = null)
+  {
+    services.Configure<McpFilteringOptions>(configuration.GetSection("McpFiltering"));
+    return services.AddMcpPrimitiveFilters(configure);
+  }
+
   public static IServiceCollection AddMcpPrimitiveFilters(
       this IServiceCollection services,
       Action<McpPrimitiveFiltersOptions>? configure = null)

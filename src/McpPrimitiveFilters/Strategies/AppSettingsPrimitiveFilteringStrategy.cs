@@ -1,40 +1,37 @@
 using McpPrimitiveFilters.Logging;
 
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace McpPrimitiveFilters.Strategies;
 
 public sealed class AppSettingsPrimitiveFilteringStrategy : McpPrimitiveFilteringStrategy
 {
-  private static readonly string[] Empty = [];
-
-  private readonly IConfiguration _configuration;
+  private readonly IOptions<McpFilteringOptions> _options;
   private readonly ILogger<AppSettingsPrimitiveFilteringStrategy> _logger;
 
-  public AppSettingsPrimitiveFilteringStrategy(IConfiguration configuration, ILogger<AppSettingsPrimitiveFilteringStrategy> logger)
-      => (_configuration, _logger) = (configuration, logger);
+  public AppSettingsPrimitiveFilteringStrategy(IOptions<McpFilteringOptions> options, ILogger<AppSettingsPrimitiveFilteringStrategy> logger)
+      => (_options, _logger) = (options, logger);
 
   protected override IEnumerable<string> FilterTools(IEnumerable<string> names)
-      => ApplyAllowlist("McpFiltering:Allowed:tools", McpPrimitiveType.Tool, names);
+      => ApplyAllowlist(_options.Value.Allowed.Tools, McpPrimitiveType.Tool, names);
 
   protected override IEnumerable<string> FilterResources(IEnumerable<string> names)
-      => ApplyAllowlist("McpFiltering:Allowed:resources", McpPrimitiveType.Resource, names);
+      => ApplyAllowlist(_options.Value.Allowed.Resources, McpPrimitiveType.Resource, names);
 
   protected override IEnumerable<string> FilterPrompts(IEnumerable<string> names)
-      => ApplyAllowlist("McpFiltering:Allowed:prompts", McpPrimitiveType.Prompt, names);
+      => ApplyAllowlist(_options.Value.Allowed.Prompts, McpPrimitiveType.Prompt, names);
 
-  private IEnumerable<string> ApplyAllowlist(string configKey, McpPrimitiveType type, IEnumerable<string> names)
+  private IEnumerable<string> ApplyAllowlist(string[] allowed, McpPrimitiveType type, IEnumerable<string> names)
   {
     var namesList = names.ToList();
-    var allowedConfig = _configuration.GetSection(configKey).Get<string[]>() ?? Empty;
 
     McpFilteringLogMessages.AppSettingsIncoming(_logger, type, namesList.Count, string.Join(", ", namesList));
-    McpFilteringLogMessages.AppSettingsAllowedConfig(_logger, type, allowedConfig.Length, string.Join(", ", allowedConfig));
+    McpFilteringLogMessages.AppSettingsAllowedConfig(_logger, type, allowed.Length, string.Join(", ", allowed));
 
-    if (allowedConfig.Length == 0)
+    if (allowed.Length == 0)
       return namesList;
 
-    var allowedSet = new HashSet<string>(allowedConfig, StringComparer.OrdinalIgnoreCase);
+    var allowedSet = new HashSet<string>(allowed, StringComparer.OrdinalIgnoreCase);
     foreach (var allowedPrimitive in allowedSet)
       McpFilteringLogMessages.Allowed(_logger, type, "appSettings", allowedPrimitive);
     return namesList.Where(allowedSet.Contains);

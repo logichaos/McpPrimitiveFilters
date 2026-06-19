@@ -1,26 +1,34 @@
+using McpPrimitiveFilters;
 using McpPrimitiveFilters.Strategies;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 namespace McpPrimitiveFilters.Unit.Tests;
 
 public class AppSettingsPrimitiveFilteringStrategyExtendedTests
 {
+  private static IOptions<McpFilteringOptions> CreateOptions(Dictionary<string, string?>? settings = null)
+  {
+    var builder = new ConfigurationBuilder();
+    if (settings is not null)
+      builder.AddInMemoryCollection(settings);
+    var config = builder.Build();
+    return Options.Create(config.GetSection("McpFiltering").Get<McpFilteringOptions>() ?? new McpFilteringOptions());
+  }
 
   [Test]
   public async Task AllThreeSections_Configured_EachFiltersIndependently()
   {
-    var config = new ConfigurationBuilder()
-        .AddInMemoryCollection(new Dictionary<string, string?>
-        {
-          ["McpFiltering:Allowed:tools:0"] = "ToolA",
-          ["McpFiltering:Allowed:resources:0"] = "ResourceA",
-          ["McpFiltering:Allowed:prompts:0"] = "PromptA",
-        })
-        .Build();
+    var options = CreateOptions(new Dictionary<string, string?>
+    {
+      ["McpFiltering:Allowed:tools:0"] = "ToolA",
+      ["McpFiltering:Allowed:resources:0"] = "ResourceA",
+      ["McpFiltering:Allowed:prompts:0"] = "PromptA",
+    });
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
 
     var toolsResult = strategy.FilterPrimitives(McpPrimitiveType.Tool,
         new[] { "ToolA", "ToolB" }).ToList();
@@ -37,14 +45,12 @@ public class AppSettingsPrimitiveFilteringStrategyExtendedTests
   [Test]
   public async Task EmptyNameList_ReturnsEmptyList()
   {
-    var config = new ConfigurationBuilder()
-        .AddInMemoryCollection(new Dictionary<string, string?>
-        {
-          ["McpFiltering:Allowed:tools:0"] = "ToolA",
-        })
-        .Build();
+    var options = CreateOptions(new Dictionary<string, string?>
+    {
+      ["McpFiltering:Allowed:tools:0"] = "ToolA",
+    });
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
 
     var result = strategy.FilterPrimitives(McpPrimitiveType.Tool,
         Array.Empty<string>()).ToList();
@@ -55,14 +61,12 @@ public class AppSettingsPrimitiveFilteringStrategyExtendedTests
   [Test]
   public async Task SingleName_Allowed_ReturnsIt()
   {
-    var config = new ConfigurationBuilder()
-        .AddInMemoryCollection(new Dictionary<string, string?>
-        {
-          ["McpFiltering:Allowed:tools:0"] = "OnlyTool",
-        })
-        .Build();
+    var options = CreateOptions(new Dictionary<string, string?>
+    {
+      ["McpFiltering:Allowed:tools:0"] = "OnlyTool",
+    });
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
 
     var result = strategy.FilterPrimitives(McpPrimitiveType.Tool,
         new[] { "OnlyTool" }).ToList();
@@ -74,14 +78,12 @@ public class AppSettingsPrimitiveFilteringStrategyExtendedTests
   [Test]
   public async Task SingleName_Blocked_ReturnsEmpty()
   {
-    var config = new ConfigurationBuilder()
-        .AddInMemoryCollection(new Dictionary<string, string?>
-        {
-          ["McpFiltering:Allowed:tools:0"] = "OtherTool",
-        })
-        .Build();
+    var options = CreateOptions(new Dictionary<string, string?>
+    {
+      ["McpFiltering:Allowed:tools:0"] = "OtherTool",
+    });
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
 
     var result = strategy.FilterPrimitives(McpPrimitiveType.Tool,
         new[] { "MyTool" }).ToList();
@@ -92,11 +94,9 @@ public class AppSettingsPrimitiveFilteringStrategyExtendedTests
   [Test]
   public async Task EmptyConfigSection_ReturnsAll()
   {
-    var config = new ConfigurationBuilder()
-        .AddInMemoryCollection(new Dictionary<string, string?>())
-        .Build();
+    var options = CreateOptions();
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
 
     var result = strategy.FilterPrimitives(McpPrimitiveType.Tool,
         new[] { "ToolA", "ToolB", "ToolC" }).ToList();

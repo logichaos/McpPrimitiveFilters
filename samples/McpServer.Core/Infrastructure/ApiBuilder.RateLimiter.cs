@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.RateLimiting;
 
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Configuration;
 
 namespace McpServer.Infrastructure;
 
@@ -27,9 +28,6 @@ public static partial class ApiBuilder
 {
   internal sealed class RateLimiterMarker;
 
-  /// <summary>
-  /// Dictionary key for resolving the first-rejection tracker from DI.
-  /// </summary>
   internal const string FirstRejectionsKey = "FirstRejections";
 
   public static bool IsRateLimiterConfigured(this IServiceProvider services) =>
@@ -40,12 +38,10 @@ public static partial class ApiBuilder
     var rateLimits = configuration
       .GetRequiredSection(RateLimiterOptions.RateLimitOptionsSectionName)
       .Get<RateLimiterOptions>()!;
-
-    services.ConfigureRateLimiter(rateLimits);
-    return services;
+    return services.ConfigureRateLimiter(rateLimits);
   }
 
-  internal static IServiceCollection ConfigureRateLimiter(this IServiceCollection services, RateLimiterOptions rateLimits)
+  public static IServiceCollection ConfigureRateLimiter(this IServiceCollection services, RateLimiterOptions rateLimits)
   {
     if (!rateLimits.Enabled)
       return services;
@@ -59,8 +55,6 @@ public static partial class ApiBuilder
 
     services.AddSingleton(rateLimits);
 
-    // Register the first-rejection tracker as a singleton so each
-    // WebApplicationFactory instance (and integration test) has its own state.
     services.AddKeyedSingleton<ConcurrentDictionary<string, DateTimeOffset>>(FirstRejectionsKey, new ConcurrentDictionary<string, DateTimeOffset>());
 
     services.AddRateLimiter(options =>
@@ -110,9 +104,6 @@ public static partial class ApiBuilder
       var partitionKey = GetPartitionKey(context.HttpContext);
       var now = DateTimeOffset.UtcNow;
 
-      // Track the first rejection in this window so we can show a
-      // decreasing countdown instead of the static full-window value
-      // that .NET's FixedWindowRateLimiter incorrectly reports.
       var firstReject = firstRejections.GetOrAdd(partitionKey, now);
       var elapsed = now - firstReject;
 

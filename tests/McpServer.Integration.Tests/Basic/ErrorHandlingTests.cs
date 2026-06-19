@@ -33,7 +33,6 @@ public class ErrorHandlingTests
     var client = Factory.CreateClient();
     var response = await client.GetAsync("/mcp");
 
-    // GET on an MCP endpoint returns a client error (Method Not Allowed or similar)
     await Assert.That((int)response.StatusCode).IsGreaterThanOrEqualTo(400);
     await Assert.That((int)response.StatusCode).IsLessThanOrEqualTo(499);
   }

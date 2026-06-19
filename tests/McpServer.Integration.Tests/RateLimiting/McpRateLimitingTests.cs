@@ -47,7 +47,6 @@ public class McpRateLimitingTests
     var client = Factory.CreateClient();
     var mcpClient = await CreateMcpClientAsync(client);
 
-    // Keep calling ListToolsAsync until rate-limited.
     var exception = await Assert.ThrowsAsync<HttpRequestException>(async () =>
     {
       while (true)
@@ -70,8 +69,6 @@ public class McpRateLimitingTests
         await mcpClient.ListToolsAsync();
     });
 
-    // The SDK's EnsureSuccessStatusCodeWithResponseBodyAsync reads the
-    // response body and includes it in the exception message.
     await Assert.That(exception!.Message)
         .Contains("Rate limit reached")
         .And.Contains("Retry after");

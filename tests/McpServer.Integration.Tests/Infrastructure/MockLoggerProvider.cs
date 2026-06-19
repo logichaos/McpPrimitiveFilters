@@ -27,7 +27,6 @@ public class MockLoggerProvider : ILoggerProvider
 
     public bool IsEnabled(LogLevel logLevel) => true;
 
-    // The MockLoggerProvider is a convenient NoopDisposable
     public IDisposable BeginScope<TState>(TState state) where TState : notnull => mockProvider;
   }
 }
