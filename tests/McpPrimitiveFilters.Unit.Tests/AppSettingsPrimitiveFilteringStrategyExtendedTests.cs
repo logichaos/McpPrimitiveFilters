@@ -1,6 +1,7 @@
 using McpPrimitiveFilters.Strategies;
 
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace McpPrimitiveFilters.Unit.Tests;
 
@@ -19,7 +20,7 @@ public class AppSettingsPrimitiveFilteringStrategyExtendedTests
             })
             .Build();
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
 
         var toolsResult = strategy.FilterPrimitives(McpPrimitiveType.Tool,
             new[] { "ToolA", "ToolB" }).ToList();
@@ -43,7 +44,7 @@ public class AppSettingsPrimitiveFilteringStrategyExtendedTests
             })
             .Build();
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
 
         var result = strategy.FilterPrimitives(McpPrimitiveType.Tool,
             Array.Empty<string>()).ToList();
@@ -61,7 +62,7 @@ public class AppSettingsPrimitiveFilteringStrategyExtendedTests
             })
             .Build();
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
 
         var result = strategy.FilterPrimitives(McpPrimitiveType.Tool,
             new[] { "OnlyTool" }).ToList();
@@ -80,7 +81,7 @@ public class AppSettingsPrimitiveFilteringStrategyExtendedTests
             })
             .Build();
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
 
         var result = strategy.FilterPrimitives(McpPrimitiveType.Tool,
             new[] { "MyTool" }).ToList();
@@ -95,7 +96,7 @@ public class AppSettingsPrimitiveFilteringStrategyExtendedTests
             .AddInMemoryCollection(new Dictionary<string, string?>())
             .Build();
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
 
         var result = strategy.FilterPrimitives(McpPrimitiveType.Tool,
             new[] { "ToolA", "ToolB", "ToolC" }).ToList();

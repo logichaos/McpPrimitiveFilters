@@ -1,6 +1,7 @@
 using McpPrimitiveFilters;
 using McpPrimitiveFilters.Strategies;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace McpPrimitiveFilters.Unit.Tests;
 
@@ -28,7 +29,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         }
         """);
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
         var names = new[] { "GetRandomNumber", "Echo", "GetTimestamp", "ListUsers", "GetServerStats" };
 
         var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
@@ -45,7 +46,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         { "McpFiltering": { "Allowed": { "tools": [] } } }
         """);
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
         var names = new[] { "GetRandomNumber", "Echo" };
 
         var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
@@ -60,7 +61,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         { "McpFiltering": { "Allowed": {} } }
         """);
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
         var names = new[] { "GetRandomNumber", "Echo" };
 
         var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
@@ -75,7 +76,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         { "McpFiltering": { "Allowed": { "tools": ["getrandomnumber"] } } }
         """);
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
         var names = new[] { "GetRandomNumber", "Echo" };
 
         var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
@@ -91,7 +92,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         { "McpFiltering": { "Allowed": { "tools": ["NonExistentTool"] } } }
         """);
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
         var names = new[] { "GetRandomNumber", "Echo" };
 
         var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
@@ -106,7 +107,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         { "McpFiltering": { "Allowed": { "resources": ["Server Info", "Current Time"] } } }
         """);
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
         var names = new[] { "Server Info", "City Weather", "Process Info", "Current Time" };
 
         var result = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
@@ -123,7 +124,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         { "McpFiltering": { "Allowed": { "resources": [] } } }
         """);
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
         var names = new[] { "Server Info", "Process Info" };
 
         var result = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
@@ -138,7 +139,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         { "McpFiltering": { "Allowed": {} } }
         """);
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
         var names = new[] { "Server Info", "Process Info" };
 
         var result = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
@@ -153,7 +154,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         { "McpFiltering": { "Allowed": { "resources": ["server info"] } } }
         """);
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
         var names = new[] { "Server Info", "Process Info" };
 
         var result = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
@@ -169,7 +170,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         { "McpFiltering": { "Allowed": { "prompts": ["Greeting", "Help"] } } }
         """);
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
         var names = new[] { "Greeting", "Help", "SecretPrompt" };
 
         var result = strategy.FilterPrimitives(McpPrimitiveType.Prompt, names).ToList();
@@ -186,7 +187,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         { "McpFiltering": { "Allowed": {} } }
         """);
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
         var names = new[] { "Greeting", "Help" };
 
         var result = strategy.FilterPrimitives(McpPrimitiveType.Prompt, names).ToList();
@@ -201,7 +202,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         { "McpFiltering": { "Allowed": { "tools": ["MyTool"], "resources": ["MyResource"] } } }
         """);
 
-        var strategy = new AppSettingsPrimitiveFilteringStrategy(config);
+        var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
 
         var toolResult = strategy.FilterPrimitives(McpPrimitiveType.Tool,
             new[] { "MyTool", "OtherTool" }).ToList();
