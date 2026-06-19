@@ -244,6 +244,48 @@ All strategy decisions are logged via `ILogger` under the category `McpPrimitive
 | `Information` | Wildcard scope grants, final allow/deny counts |
 | `Warning` | Call denied at invocation time |
 
+## Telemetry
+
+The library emits OpenTelemetry-compatible signals using `System.Diagnostics.ActivitySource` and `Meter`. No additional NuGet packages are required — any OpenTelemetry collector (OTLP exporter, Jaeger, Zipkin, etc.) that instruments `ActivitySource` will pick up these signals automatically.
+
+### Source
+
+| Source | Name | Version |
+|---|---|---|
+| `ActivitySource` | `McpPrimitiveFilters` | `0.1.0` |
+| `Meter` | `McpPrimitiveFilters` | `0.1.0` |
+
+### Traces
+
+Every filter operation creates an `Activity` span. The operation name reflects the action:
+
+- `filter tools list` — filtering the tool list
+- `check tool call` — checking whether a tool call is allowed
+- `filter resources list` — filtering resources or resource templates
+- `check resource read` — checking whether a resource read is allowed
+- `filter prompts list` — filtering the prompt list
+- `check prompt get` — checking whether a prompt get is allowed
+
+Each span carries the following tags:
+
+| Tag | Description |
+|---|---|
+| `mcp.primitive.type` | `Tool`, `Resource`, or `Prompt` |
+| `mcp.primitive.name` | The primitive name (call/read/get checks only) |
+| `mcp.filter.operation` | `list`, `call`, `read`, or `get` |
+| `mcp.filter.allowed` | Number of primitives allowed (list operations) |
+| `mcp.filter.denied` | Number of primitives denied (list operations) |
+
+### Metrics
+
+| Instrument | Type | Name | Description |
+|---|---|---|---|
+| Counter | `long` | `mcp.filter.calls` | Total filter operations executed |
+| Counter | `long` | `mcp.filter.denials` | Total primitives denied |
+| Histogram | `double` | `mcp.filter.duration` | Filter operation duration (ms) |
+
+All metrics include `mcp.primitive.type` and `mcp.filter.operation` tags.
+
 ## License
 
 MPL-2.0 — see the [LICENSE](../../LICENSE) file at the repository root.

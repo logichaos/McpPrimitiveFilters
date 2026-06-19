@@ -1,4 +1,3 @@
-using McpPrimitiveFilters.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -43,7 +42,6 @@ internal sealed class PromptFilterConfigurator : IConfigureOptions<McpServerOpti
     {
         if (c.Params?.Name is not { } n) return await next(c, ct);
         if (Allows(n, McpPrimitiveType.Prompt)) return await next(c, ct);
-        LogDenial(McpPrimitiveType.Prompt, n);
         return new GetPromptResult
         {
             Messages = [new PromptMessage
@@ -56,30 +54,8 @@ internal sealed class PromptFilterConfigurator : IConfigureOptions<McpServerOpti
 
     private List<Prompt> FilterByName(McpPrimitiveType type,
         IList<Prompt> items, Func<Prompt, string> getName)
-        => Apply(type, items, getName);
-
-    private List<T> Apply<T>(McpPrimitiveType type,
-        IList<T> items, Func<T, string> getName)
-    {
-        if (_strategies.Length == 0) return [.. items];
-
-        var names = items.Select(getName).ToList();
-        foreach (var s in _strategies)
-            names = [.. s.FilterPrimitives(type, names)];
-
-        var allowed = new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
-        return [.. items.Where(item => allowed.Contains(getName(item)))];
-    }
+        => McpPrimitiveFilterPipeline.Apply(type, "list", items, getName, _strategies, _logger);
 
     private bool Allows(string name, McpPrimitiveType type)
-    {
-        if (_strategies.Length == 0) return true;
-        var names = new[] { name }.AsEnumerable();
-        foreach (var s in _strategies)
-            names = s.FilterPrimitives(type, names);
-        return names.Any();
-    }
-
-    private void LogDenial(McpPrimitiveType type, string name)
-        => McpFilteringLogMessages.CallDenied(_logger, type, null, name);
+        => McpPrimitiveFilterPipeline.Allows(name, type, "get", _strategies, _logger);
 }
