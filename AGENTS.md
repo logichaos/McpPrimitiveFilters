@@ -13,6 +13,7 @@ Do **not** add:
 - Section separator banners (`// ─── ...`)
 - Inline comments that narrate the next line of code
 - Comments on obvious assertions in tests
+- Any comments on generated code, unless they are **very** important to understanding the code
 
 Keep comments when:
 

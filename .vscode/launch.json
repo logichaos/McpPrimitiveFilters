@@ -14,7 +14,7 @@
     "name": "C#: McpServer Debug",
     "type": "dotnet",
     "request": "launch",
-    "projectPath": "${workspaceFolder}/src/McpServer/McpServer.csproj"
+    "projectPath": "${workspaceFolder}/samples/McpServer/McpServer.csproj"
    }
   ]
 }

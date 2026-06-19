@@ -25,14 +25,18 @@ public sealed class AppSettingsPrimitiveFilteringStrategy : McpPrimitiveFilterin
 
   private IEnumerable<string> ApplyAllowlist(string configKey, McpPrimitiveType type, IEnumerable<string> names)
   {
+    var namesList = names.ToList();
     var allowedConfig = _configuration.GetSection(configKey).Get<string[]>() ?? Empty;
 
+    McpFilteringLogMessages.AppSettingsIncoming(_logger, type, namesList.Count, string.Join(", ", namesList));
+    McpFilteringLogMessages.AppSettingsAllowedConfig(_logger, type, allowedConfig.Length, string.Join(", ", allowedConfig));
+
     if (allowedConfig.Length == 0)
-      return names;
+      return namesList;
 
     var allowedSet = new HashSet<string>(allowedConfig, StringComparer.OrdinalIgnoreCase);
     foreach (var allowedPrimitive in allowedSet)
       McpFilteringLogMessages.Allowed(_logger, type, "appSettings", allowedPrimitive);
-    return names.Where(allowedSet.Contains);
+    return namesList.Where(allowedSet.Contains);
   }
 }

@@ -1,7 +1,10 @@
 using System.ComponentModel;
+using System.Text.Json;
 
 using McpServer.Infrastructure.Compliance;
 
+using ModelContextProtocol;
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
 namespace McpServer.Tools;
@@ -14,25 +17,27 @@ public record ServerStats(
 
 internal static partial class ToolLogMessages
 {
-    [LoggerMessage(Level = LogLevel.Information,
-        Message = "ListUsers: returned {Count} users")]
-    public static partial void LogListUsers(ILogger logger, int count);
+  [LoggerMessage(Level = LogLevel.Information,
+      Message = "ListUsers: returned {Count} users")]
+  public static partial void LogListUsers(ILogger logger, int count);
 
-    [LoggerMessage(Level = LogLevel.Information,
-        Message = "Server stats: Uptime={Uptime}, Requests={RequestCount}")]
-    public static partial void LogServerStats(
-        ILogger logger,
-        [SensitiveData] string uptime,
-        int requestCount);
+  [LoggerMessage(Level = LogLevel.Information,
+      Message = "Server stats: Uptime={Uptime}, Requests={RequestCount}")]
+  public static partial void LogServerStats(
+      ILogger logger,
+      [SensitiveData] string uptime,
+      int requestCount);
 }
 
 public class RandomNumberTools
 {
   private readonly ILogger<RandomNumberTools> _logger;
+  private readonly ModelContextProtocol.Server.McpServer? _server;
 
-  public RandomNumberTools(ILogger<RandomNumberTools> logger)
+  public RandomNumberTools(ILogger<RandomNumberTools> logger, ModelContextProtocol.Server.McpServer? server = null)
   {
     _logger = logger;
+    _server = server;
   }
 
   [McpServerTool]
@@ -41,7 +46,9 @@ public class RandomNumberTools
     [Description("Minimum value (inclusive)")] int min = 0,
     [Description("Maximum value (exclusive)")] int max = 100)
   {
-    return Random.Shared.Next(min, max);
+    var result = Random.Shared.Next(min, max);
+    SendClientLog($"get_random_number: Min={min}, Max={max} => {result}");
+    return result;
   }
 
   [McpServerTool]
@@ -56,7 +63,23 @@ public class RandomNumberTools
   public string Echo(
     [Description("The message to echo back")] string message)
   {
+    SendClientLog($"echo: received message of length {message.Length}");
     return message;
+  }
+
+  private void SendClientLog(string message)
+  {
+    if (_server is null)
+      return;
+
+    _ = _server.SendNotificationAsync(
+        NotificationMethods.LoggingMessageNotification,
+        new LoggingMessageNotificationParams
+        {
+          Level = LoggingLevel.Info,
+          Logger = "Tools",
+          Data = JsonSerializer.SerializeToElement(message),
+        });
   }
 
   [McpServerTool]

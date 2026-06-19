@@ -1,57 +1,48 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using TUnit.Core.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+
+using TUnit.AspNetCore;
 
 namespace McpServer.Integration.Tests.OAuth;
 
-/// <summary>
-/// WebApplicationFactory that starts the in-memory TestOAuthServer
-/// and uses the Development environment (which has InMemory OAuth
-/// pre-configured pointing at localhost:7029).
-/// </summary>
-public sealed class OAuthWebApplicationFactory : WebApplicationFactory<Program>, IAsyncInitializer
+public sealed class OAuthWebApplicationFactory
+    : TestWebApplicationFactory<Program>
 {
-    private const string OAuthServerUrl = "https://localhost:7029";
+  [ClassDataSource<OAuthServerWebApplicationFactory>(Shared = SharedType.PerTestSession)]
+  public required OAuthServerWebApplicationFactory OAuthServer { get; init; }
 
-    private readonly ModelContextProtocol.TestOAuthServer.Program _oauthServer;
-    private readonly CancellationTokenSource _oauthCts = new();
+  protected override void ConfigureWebHost(IWebHostBuilder builder)
+  {
+    builder.UseEnvironment("Development");
 
-    public OAuthWebApplicationFactory()
+    var oauthBaseAddress = OAuthServer.Server.BaseAddress!;
+    var authority = oauthBaseAddress.ToString().TrimEnd('/');
+
+    builder.ConfigureServices(services =>
     {
-        _oauthServer = new ModelContextProtocol.TestOAuthServer.Program(
-            kestrelTransport: null);
-    }
+      services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
+          {
+          options.Authority = authority;
+          options.Backchannel = CreateBackchannel();
+          options.TokenValidationParameters = new TokenValidationParameters
+          {
+            ValidAudience = "http://localhost",
+            ValidIssuer = authority,
+            NameClaimType = "name",
+            RoleClaimType = "roles"
+          };
+        });
+    });
+  }
 
-    public async Task InitializeAsync()
+  private static HttpClient CreateBackchannel()
+  {
+    var handler = new SocketsHttpHandler
     {
-        // Start the TestOAuthServer (it binds to 7029)
-        _ = _oauthServer.RunServerAsync(cancellationToken: _oauthCts.Token);
-        await _oauthServer.ServerStarted.WaitAsync(TimeSpan.FromSeconds(15));
-
-        // Set ValidResources to include the test server's expected URL
-        _oauthServer.ValidResources = [
-            "http://localhost",
-            "http://localhost:7071",
-            "http://localhost:5000",
-            "http://localhost:5000/mcp",
-        ];
-
-        // Force the test server to start
-        _ = Server;
-    }
-
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        // Development environment already has InMemory OAuth enabled
-        // pointing at https://localhost:7029 with SSL validation disabled.
-        builder.UseEnvironment("Development");
-    }
-
-    public override async ValueTask DisposeAsync()
-    {
-        _oauthCts.Cancel();
-        try { await Task.Delay(200); } catch { }
-        _oauthCts.Dispose();
-        await base.DisposeAsync();
-    }
+      SslOptions = { RemoteCertificateValidationCallback = (_, _, _, _) => true }
+    };
+    return new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
+  }
 }

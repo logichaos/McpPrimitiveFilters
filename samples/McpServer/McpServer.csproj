@@ -11,6 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\McpServer.Core\McpServer.Core.csproj" />
     <ProjectReference Include="..\..\src\McpPrimitiveFilters\McpPrimitiveFilters.csproj" />
   </ItemGroup>
