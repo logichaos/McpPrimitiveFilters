@@ -1,108 +1,12 @@
 # McpPrimitiveFilters
 
-Pluggable authorization filtering for MCP server **tools**, **resources**, and **prompts**. Attach one or more strategies to decide which primitives each authenticated (or anonymous) client can see and invoke.
+Pluggable filtering for MCP server **tools**, **resources**, and **prompts**. Attach one or more strategies to decide which primitives each authenticated (or anonymous) client can see and invoke.
 
-## What it does
+Comes with two built-in strategies: **appsettings allowlists** (for local/dev control) and **OAuth scope claims** (for enterprise authorization). You can add your own by extending `McpPrimitiveFilteringStrategy`.
 
-- Intercepts every `tools/list`, `tools/call`, `resources/list`, `resources/read`, `prompts/list`, and `prompts/get` request on your MCP server.
-- Runs a pipeline of pluggable `McpPrimitiveFilteringStrategy` implementations — each receives the `HttpContext` and the list of primitive names, and returns the subset that is **allowed**.
-- Comes with two built-in strategies: **appsettings allowlists** (for local/dev control) and **OAuth scope claims** (for enterprise authorization).
-- You can add your own strategies by extending `McpPrimitiveFilteringStrategy`.
+## How to use
 
-## Architecture
-
-### Package surface
-
-| Type | Role |
-|---|---|
-| `McpPrimitiveFilteringStrategy` | Abstract base — override `FilterTools`, `FilterResources`, `FilterPrompts` |
-| `McpPrimitiveFilterConfigurator` | Wires strategies into `McpServerOptions` request filters |
-| `McpPrimitiveFiltersOptions` | Toggles built-in strategies and per-primitive-type filtering |
-| `McpPrimitiveFiltersExtensions` | `AddMcpPrimitiveFilters()` DI registration |
-| `AppSettingsPrimitiveFilteringStrategy` | Allowlist from `IConfiguration` |
-| `OAuthClaimsFilteringStrategy` | Allowlist from `scope` claims on the JWT bearer principal |
-
-### Request flow
-
-```mermaid
-sequenceDiagram
-    participant C as MCP Client
-    participant S as McpServer (Http)
-    participant CF as McpPrimitiveFilterConfigurator
-    participant ST as FilteringStrategy[]
-    participant H as McpServer Handler
-
-    C->>S: tools/list
-    S->>CF: ListTools filter runs
-    CF->>H: await next() → full tool list
-    H-->>CF: 10 tools
-    CF->>ST: FilterPrimitives(HttpContext, Tool, names)
-    loop each strategy
-        ST-->>CF: subset of names
-    end
-    CF-->>S: filtered tool list (4 allowed)
-    S-->>C: { tools: [...] }
-```
-
-```mermaid
-sequenceDiagram
-    participant C as MCP Client
-    participant S as McpServer (Http)
-    participant CF as McpPrimitiveFilterConfigurator
-    participant ST as FilteringStrategy[]
-    participant H as McpServer Handler
-
-    C->>S: tools/call { name: "SecretTool" }
-    S->>CF: CallTool filter runs
-    CF->>ST: Allows("SecretTool", Tool)?
-    Note over ST: strategies check HttpContext
-    ST-->>CF: false (denied)
-    CF-->>S: error result: "not authorized"
-    S-->>C: { isError: true, content: [...] }
-```
-
-### Strategy pipeline
-
-```mermaid
-flowchart LR
-    subgraph Pipeline
-        direction LR
-        IN[all primitive names] --> S1[Strategy 1]
-        S1 --> S2[Strategy 2]
-        S2 --> S3[...]
-        S3 --> S4[Strategy N]
-        S4 --> OUT[filtered names]
-    end
-    HTTP[HttpContext] -.-> S1 & S2 & S3 & S4
-```
-
-Each strategy takes the output of the previous one as its input — the pipeline narrows the allowlist. If any strategy returns an empty list, downstream strategies never run (the result is empty).
-
-### Composition in the DI container
-
-```mermaid
-flowchart TD
-    DI[IServiceCollection] -->|AddMcpPrimitiveFilters| REG
-
-    subgraph REG[Registered services]
-        HTTP[IHttpContextAccessor]
-        OPTS[McpPrimitiveFiltersOptions]
-        S1[AppSettingsPrimitiveFilteringStrategy]
-        S2[OAuthClaimsFilteringStrategy]
-        CFG[McpPrimitiveFilterConfigurator<br/>IConfigureOptions&lt;McpServerOptions&gt;]
-    end
-
-    S1 & S2 --> CFG
-    HTTP --> CFG
-    OPTS --> CFG
-    CFG -->|Adds request filters| MCP[McpServerOptions.Filters]
-```
-
-## Getting started
-
-### 1. Install
-
-Add the package and register it on your MCP server's service collection:
+### Add the package and register
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
@@ -110,25 +14,50 @@ using Microsoft.Extensions.DependencyInjection;
 builder.Services.AddMcpPrimitiveFilters();
 ```
 
-This registers the `IHttpContextAccessor`, both built-in strategies, and the configurator that attaches filters to the MCP server pipeline.
+This registers `IHttpContextAccessor`, three per-primitive configurators, and both built-in strategies (AppSettings + OAuth).
 
-### 2. Configuration
+### With options
 
-All options live under `McpFiltering` in `appsettings.json`:
+```csharp
+builder.Services.AddMcpPrimitiveFilters(options =>
+{
+    // Use only OAuth scopes — disable appsettings allowlist
+    options.UseBuiltinAppSettingsFilteringStrategy = false;
+
+    // Make prompts publicly visible (no filtering)
+    options.FilterPrompts = false;
+});
+```
+
+| Option | Default | Description |
+|---|---|---|
+| `UseBuiltinAppSettingsFilteringStrategy` | `true` | Enables the `AppSettingsPrimitiveFilteringStrategy` |
+| `UseBuiltinOAuthClaimsFilteringStrategy` | `true` | Enables the `OAuthClaimsFilteringStrategy` |
+| `FilterTools` | `true` | Whether to filter tool lists and tool calls |
+| `FilterResources` | `true` | Whether to filter resource lists and reads |
+| `FilterPrompts` | `true` | Whether to filter prompt lists and gets |
+
+### AppSettings allowlist
+
+Configure which primitives are exposed via `appsettings.json`:
 
 ```jsonc
 {
   "McpFiltering": {
     "Allowed": {
-      "tools": ["GetRandomNumber", "Echo", "GetTimestamp"],
-      "resources": ["Server Info", "Current Time"],
-      "prompts": ["Greeting", "Help"]
+      "tools": ["GetRandomNumber", "Echo"],
+      "resources": ["Server Info"],
+      "prompts": null          // null = allow all prompts
     }
   }
 }
 ```
 
-For OAuth, configure scope claims on your identity provider. The strategy looks for:
+An empty array means *nothing is allowed*. Omitting the key or setting it to `null` means *everything is allowed*.
+
+### OAuth scope claims
+
+When using OAuth, the strategy maps scope claims to primitives:
 
 | Scope claim | Effect |
 |---|---|
@@ -141,51 +70,7 @@ For OAuth, configure scope claims on your identity provider. The strategy looks 
 
 If the client is **not authenticated**, the OAuth strategy passes through all names — it only filters when a principal is present.
 
-### 3. Customize behaviour
-
-```csharp
-builder.Services.AddMcpPrimitiveFilters(options =>
-{
-    options.UseBuiltinAppSettingsFilteringStrategy = false; // only OAuth
-    options.UseBuiltinOAuthClaimsFilteringStrategy = true;
-    options.FilterTools = true;
-    options.FilterResources = true;
-    options.FilterPrompts = false;          // prompts are public
-});
-```
-
-## Code examples
-
-### AppSettings allowlist
-
-The simplest setup — control everything from `appsettings.json`:
-
-```csharp
-var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddMcpPrimitiveFilters();
-// ... register your tools, resources, prompts ...
-var app = builder.Build();
-app.MapMcp();
-app.Run();
-```
-
-```jsonc
-// appsettings.json
-{
-  "McpFiltering": {
-    "Allowed": {
-      "tools": ["Echo"],
-      "resources": []
-    }
-  }
-}
-```
-
-An empty allowlist array means *nothing is allowed*. Omitting the key or setting it to `null` means *everything is allowed*.
-
-### OAuth scope-based filtering
-
-Register filtering alongside your OAuth setup:
+### Complete OAuth example
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -196,8 +81,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddMcpPrimitiveFilters(options =>
 {
-    options.UseBuiltinAppSettingsFilteringStrategy = false; // rely on scopes
-    options.UseBuiltinOAuthClaimsFilteringStrategy = true;
+    options.UseBuiltinAppSettingsFilteringStrategy = false;
 });
 
 var app = builder.Build();
@@ -209,17 +93,15 @@ app.Run();
 
 A client presenting a token with `scope: mcp.tool.Echo mcp.tool.Status` will only see and be able to call `Echo` and `Status`. Any other tool call returns an error with the message `"Tool 'X' is not authorized."`.
 
-### Writing a custom strategy
+## Writing a custom strategy
 
-Extend `McpPrimitiveFilteringStrategy` and register it in DI:
+Extend `McpPrimitiveFilteringStrategy` and override the methods for the primitive types you want to filter. The base class defaults to passing everything through, so you only override what you need.
 
 ```csharp
 public sealed class TimeBasedFilteringStrategy : McpPrimitiveFilteringStrategy
 {
-    protected override IEnumerable<string> FilterTools(
-        HttpContext httpContext, IEnumerable<string> names)
+    protected override IEnumerable<string> FilterTools(IEnumerable<string> names)
     {
-        // Only expose admin tools during business hours
         if (DateTime.Now.Hour is >= 9 and < 17)
             return names;
         return names.Where(n => !n.StartsWith("Admin", StringComparison.OrdinalIgnoreCase));
@@ -227,12 +109,32 @@ public sealed class TimeBasedFilteringStrategy : McpPrimitiveFilteringStrategy
 }
 ```
 
+If your strategy needs request context, inject `IHttpContextAccessor`:
+
+```csharp
+public sealed class RoleBasedFilteringStrategy : McpPrimitiveFilteringStrategy
+{
+    private readonly IHttpContextAccessor _http;
+
+    public RoleBasedFilteringStrategy(IHttpContextAccessor http) => _http = http;
+
+    protected override IEnumerable<string> FilterTools(IEnumerable<string> names)
+    {
+        var user = _http.HttpContext?.User;
+        if (user?.IsInRole("Admin") == true) return names;
+        return names.Where(n => !n.StartsWith("Admin"));
+    }
+}
+```
+
+Register it alongside the built-in strategies:
+
 ```csharp
 builder.Services.AddMcpPrimitiveFilters();
 builder.Services.AddSingleton<McpPrimitiveFilteringStrategy, TimeBasedFilteringStrategy>();
 ```
 
-All `McpPrimitiveFilteringStrategy` registrations are resolved as `IEnumerable<McpPrimitiveFilteringStrategy>` and run in registration order. Built-in strategies are registered as `TryAdd*` so your custom registration takes precedence when you use the same type.
+All `McpPrimitiveFilteringStrategy` registrations run in registration order as a pipeline — each strategy receives the output of the previous one, narrowing the allowlist. If any strategy returns an empty list, downstream strategies are skipped. Built-in strategies are registered via `TryAddEnumerable`, so they coexist with your custom ones. Use the options to disable built-ins you don't need.
 
 ## Logging
 
@@ -244,6 +146,54 @@ All strategy decisions are logged via `ILogger` under the category `McpPrimitive
 | `Information` | Wildcard scope grants, final allow/deny counts |
 | `Warning` | Call denied at invocation time |
 
+## Telemetry
+
+The library emits OpenTelemetry-compatible signals using `System.Diagnostics.ActivitySource` and `Meter`. No additional NuGet packages are required — any OpenTelemetry collector (OTLP exporter, Jaeger, Zipkin, etc.) that instruments `ActivitySource` will pick up these signals automatically.
+
+### Source
+
+| Source | Name | Version |
+|---|---|---|
+| `ActivitySource` | `McpPrimitiveFilters` | `0.1.0` |
+| `Meter` | `McpPrimitiveFilters` | `0.1.0` |
+
+### Traces
+
+Every filter operation creates an `Activity` span. The operation name reflects the action:
+
+- `filter tools list` — filtering the tool list
+- `check tool call` — checking whether a tool call is allowed
+- `filter resources list` — filtering resources or resource templates
+- `check resource read` — checking whether a resource read is allowed
+- `filter prompts list` — filtering the prompt list
+- `check prompt get` — checking whether a prompt get is allowed
+
+Each span carries the following tags:
+
+| Tag | Description |
+|---|---|
+| `mcp.primitive.type` | `Tool`, `Resource`, or `Prompt` |
+| `mcp.primitive.name` | The primitive name (call/read/get checks only) |
+| `mcp.filter.operation` | `list`, `call`, `read`, or `get` |
+| `mcp.filter.allowed` | Number of primitives allowed (list operations) |
+| `mcp.filter.denied` | Number of primitives denied (list operations) |
+
+### Metrics
+
+| Instrument | Type | Name | Description |
+|---|---|---|---|
+| Counter | `long` | `mcp.filter.calls` | Total filter operations executed |
+| Counter | `long` | `mcp.filter.denials` | Total primitives denied |
+| Histogram | `double` | `mcp.filter.duration` | Filter operation duration (ms) |
+
+All metrics include `mcp.primitive.type` and `mcp.filter.operation` tags.
+
 ## License
 
 MPL-2.0 — see the [LICENSE](../../LICENSE) file at the repository root.
+
+## About this project
+
+This is a project for me to learn more about the MCP server SDK, as well as the capabilities of MCP in .NET. I try hard to make it production-ready, but it should be taken **AS IS** — if you find bugs or have ideas, please open an issue and I'll do my best to address them.
+
+If you have feedback about the structure, the approach, or anything else, I'd love to hear it. This is my first public repo and I'm still learning.

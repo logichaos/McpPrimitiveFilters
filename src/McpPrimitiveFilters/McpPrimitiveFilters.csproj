@@ -10,8 +10,8 @@
     <PackageId>McpPrimitiveFilters</PackageId>
     <PackageVersion>0.1.0-beta</PackageVersion>
     <Authors>zephy</Authors>
-    <Description>Pluggable authorization filtering for MCP server tools, resources, and prompts. Filter by OAuth scope claims or appsettings allowlists.</Description>
-    <PackageTags>AI;MCP;server;filtering;oauth;authorization;tools;resources;prompts;primitive</PackageTags>
+    <Description>Pluggable filtering for MCP server tools, resources, and prompts. Filter by OAuth scope claims or appsettings allowlists.</Description>
+    <PackageTags>AI;MCP;server;filtering;oauth;tools;resources;prompts;primitive</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/zephy/AuthenticatedHttpMcpServer</PackageProjectUrl>

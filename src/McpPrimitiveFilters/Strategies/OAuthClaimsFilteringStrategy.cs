@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using McpPrimitiveFilters.Logging;
 
 namespace McpPrimitiveFilters.Strategies;
@@ -28,11 +29,13 @@ public sealed class OAuthClaimsFilteringStrategy : McpPrimitiveFilteringStrategy
         McpPrimitiveType type,
         IEnumerable<string> names, string scopePrefix, string allScope)
     {
+        var nameArray = names.ToArray();
+
         var ctx = _httpAccessor.HttpContext;
         if (ctx?.User.Identity?.IsAuthenticated != true)
         {
-            McpFilteringLogMessages.NotAuthenticated(_logger, type, names.Count());
-            return names;
+            McpFilteringLogMessages.NotAuthenticated(_logger, type, nameArray.Length);
+            return nameArray;
         }
 
         var principal = ctx.User;
@@ -41,10 +44,9 @@ public sealed class OAuthClaimsFilteringStrategy : McpPrimitiveFilteringStrategy
         if (principal.HasClaim("scope", allScope))
         {
             McpFilteringLogMessages.AllAccess(_logger, type, identityName);
-            return names;
+            return nameArray;
         }
 
-        var nameArray = names.ToArray();
         var allowed = new List<string>();
         var denied = new List<string>();
 
