@@ -23,7 +23,7 @@ internal sealed class ToolFilterConfigurator : McpPrimitiveFilterConfigurator
     {
         var r = await next(c, ct);
         if (r.Tools is { Count: > 0 })
-            r.Tools = FilterByName(McpPrimitiveType.Tool, "list", r.Tools, t => t.Name);
+            r.Tools = FilterByName(McpPrimitiveType.Tool, McpPrimitiveFilterPipeline.OpList, r.Tools, t => t.Name);
         return r;
     };
 
@@ -31,7 +31,7 @@ internal sealed class ToolFilterConfigurator : McpPrimitiveFilterConfigurator
         McpRequestHandler<CallToolRequestParams, CallToolResult> next) => async (c, ct) =>
     {
         if (c.Params?.Name is not { } n) return await next(c, ct);
-        if (Allows(n, McpPrimitiveType.Tool, "call")) return await next(c, ct);
+        if (Allows(n, McpPrimitiveType.Tool, McpPrimitiveFilterPipeline.OpCall)) return await next(c, ct);
         return new CallToolResult
         {
             Content = [new TextContentBlock { Text = $"Tool '{n}' is not authorized." }],

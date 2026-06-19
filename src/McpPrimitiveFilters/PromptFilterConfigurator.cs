@@ -23,7 +23,7 @@ internal sealed class PromptFilterConfigurator : McpPrimitiveFilterConfigurator
     {
         var r = await next(c, ct);
         if (r.Prompts is { Count: > 0 })
-            r.Prompts = FilterByName(McpPrimitiveType.Prompt, "list", r.Prompts, p => p.Name);
+            r.Prompts = FilterByName(McpPrimitiveType.Prompt, McpPrimitiveFilterPipeline.OpList, r.Prompts, p => p.Name);
         return r;
     };
 
@@ -31,7 +31,7 @@ internal sealed class PromptFilterConfigurator : McpPrimitiveFilterConfigurator
         McpRequestHandler<GetPromptRequestParams, GetPromptResult> next) => async (c, ct) =>
     {
         if (c.Params?.Name is not { } n) return await next(c, ct);
-        if (Allows(n, McpPrimitiveType.Prompt, "get")) return await next(c, ct);
+        if (Allows(n, McpPrimitiveType.Prompt, McpPrimitiveFilterPipeline.OpGet)) return await next(c, ct);
         return new GetPromptResult
         {
             Messages = [new PromptMessage

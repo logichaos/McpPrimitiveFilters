@@ -6,6 +6,11 @@ namespace McpPrimitiveFilters;
 
 internal static class McpPrimitiveFilterPipeline
 {
+    public const string OpList = "list";
+    public const string OpCall = "call";
+    public const string OpRead = "read";
+    public const string OpGet  = "get";
+
     public static List<T> Apply<T>(
         McpPrimitiveType type,
         string operation,

@@ -25,7 +25,7 @@ internal sealed class ResourceFilterConfigurator : McpPrimitiveFilterConfigurato
     {
         var r = await next(c, ct);
         if (r.Resources is { Count: > 0 })
-            r.Resources = FilterByName(McpPrimitiveType.Resource, "list", r.Resources, x => x.Name);
+            r.Resources = FilterByName(McpPrimitiveType.Resource, McpPrimitiveFilterPipeline.OpList, r.Resources, x => x.Name);
         return r;
     };
 
@@ -35,7 +35,7 @@ internal sealed class ResourceFilterConfigurator : McpPrimitiveFilterConfigurato
         var r = await next(c, ct);
         if (r.ResourceTemplates is { Count: > 0 })
             r.ResourceTemplates = FilterByName(
-                McpPrimitiveType.Resource, "list", r.ResourceTemplates, x => x.Name);
+                McpPrimitiveType.Resource, McpPrimitiveFilterPipeline.OpList, r.ResourceTemplates, x => x.Name);
         return r;
     };
 
@@ -44,7 +44,7 @@ internal sealed class ResourceFilterConfigurator : McpPrimitiveFilterConfigurato
     {
         if (c.Params?.Uri is not { } uri) return await next(c, ct);
         var name = ResolveResourceName(c.Services, uri);
-        if (name is null || Allows(name, McpPrimitiveType.Resource, "read"))
+        if (name is null || Allows(name, McpPrimitiveType.Resource, McpPrimitiveFilterPipeline.OpRead))
             return await next(c, ct);
         return new ReadResourceResult
         {
