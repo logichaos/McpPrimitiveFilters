@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using McpPrimitiveFilters.Logging;
 
 namespace McpPrimitiveFilters.Strategies;
