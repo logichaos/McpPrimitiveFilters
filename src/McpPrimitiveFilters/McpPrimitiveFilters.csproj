@@ -8,8 +8,7 @@
 
     <!-- NuGet packaging -->
     <PackageId>McpPrimitiveFilters</PackageId>
-    <PackageVersion>0.1.0-beta</PackageVersion>
-    <Authors>zephy</Authors>
+<Authors>zephy</Authors>
     <Description>Pluggable filtering for MCP server tools, resources, and prompts. Filter by OAuth scope claims or appsettings allowlists.</Description>
     <PackageTags>AI;MCP;server;filtering;oauth;tools;resources;prompts;primitive</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
