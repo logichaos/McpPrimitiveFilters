@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 
 using ModelContextProtocol;
@@ -14,7 +16,18 @@ public static partial class ApiBuilder
       IConfiguration configuration,
       Action<IMcpServerBuilder>? configureMcp = null)
   {
-    var transport = configuration.GetValue<string>("MCP:Transport") ?? "http";
+    var mcp = BindFromConfig<McpOptions>(configuration, McpOptions.SectionName);
+    var core = BindFromConfig<McpCoreOptions>(configuration, McpCoreOptions.SectionName);
+    return services.AddMcp(mcp, core, configureMcp);
+  }
+
+  public static IServiceCollection AddMcp(
+      this IServiceCollection services,
+      McpOptions transportOptions,
+      McpCoreOptions coreOptions,
+      Action<IMcpServerBuilder>? configureMcp = null)
+  {
+    var transport = transportOptions.Transport;
     var isHttp = transport is "http" or "both";
     var isStdio = transport is "stdio" or "both";
 
@@ -62,9 +75,9 @@ public static partial class ApiBuilder
     var oauthConfigured = services.Any(sd => sd.ServiceType == typeof(OAuthMarker));
     if (!oauthConfigured && isHttp)
     {
-      var allowedOrigins = configuration
-          .GetSection("Mcp:AllowedOrigins")
-          .Get<string[]>() ?? ["http://localhost:5173", "http://localhost:6274"];
+      var allowedOrigins = coreOptions.AllowedOrigins.Length > 0
+          ? coreOptions.AllowedOrigins
+          : new[] { "http://localhost:5173", "http://localhost:6274" };
 
       services.AddCors(options =>
       {
@@ -83,7 +96,8 @@ public static partial class ApiBuilder
 
   public static WebApplication UseMcp(this WebApplication app)
   {
-    var transport = app.Configuration.GetValue<string>("MCP:Transport") ?? "http";
+    var transportOptions = app.Services.GetRequiredService<IOptions<McpOptions>>().Value;
+    var transport = transportOptions.Transport;
     var isHttp = transport is "http" or "both";
 
     if (!isHttp)

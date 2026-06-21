@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\McpServer.Core\McpServer.Core.csproj" />
+    <ProjectReference Include="..\ModelContextProtocol.TestOAuthServer\ModelContextProtocol.TestOAuthServer.csproj" />
     <ProjectReference Include="..\..\src\McpPrimitiveFilters\McpPrimitiveFilters.csproj" />
   </ItemGroup>
 

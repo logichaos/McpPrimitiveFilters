@@ -3,24 +3,25 @@ using McpPrimitiveFilters.Strategies;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 namespace McpPrimitiveFilters.Unit.Tests;
 
 public class AppSettingsPrimitiveFilteringStrategyTests
 {
-
-  private static IConfiguration CreateConfiguration(string? json)
+  private static IOptions<McpFilteringOptions> CreateOptions(string? json)
   {
     var builder = new ConfigurationBuilder();
     if (json is not null)
       builder.AddJsonStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json)));
-    return builder.Build();
+    var config = builder.Build();
+    return Options.Create(config.GetSection("McpFiltering").Get<McpFilteringOptions>() ?? new McpFilteringOptions());
   }
 
   [Test]
   public async Task AllowedTools_ContainsSubset_ReturnsOnlyMatchingTools()
   {
-    var config = CreateConfiguration("""
+    var options = CreateOptions("""
         {
             "McpFiltering": {
                 "Allowed": {
@@ -30,7 +31,7 @@ public class AppSettingsPrimitiveFilteringStrategyTests
         }
         """);
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
     var names = new[] { "GetRandomNumber", "Echo", "GetTimestamp", "ListUsers", "GetServerStats" };
 
     var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
@@ -43,11 +44,11 @@ public class AppSettingsPrimitiveFilteringStrategyTests
   [Test]
   public async Task AllowedTools_IsEmptyArray_ReturnsAllToolsUnchanged()
   {
-    var config = CreateConfiguration("""
+    var options = CreateOptions("""
         { "McpFiltering": { "Allowed": { "tools": [] } } }
         """);
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
     var names = new[] { "GetRandomNumber", "Echo" };
 
     var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
@@ -58,11 +59,11 @@ public class AppSettingsPrimitiveFilteringStrategyTests
   [Test]
   public async Task AllowedTools_KeyMissing_ReturnsAllToolsUnchanged()
   {
-    var config = CreateConfiguration("""
+    var options = CreateOptions("""
         { "McpFiltering": { "Allowed": {} } }
         """);
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
     var names = new[] { "GetRandomNumber", "Echo" };
 
     var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
@@ -73,11 +74,11 @@ public class AppSettingsPrimitiveFilteringStrategyTests
   [Test]
   public async Task AllowedTools_NameMatchingIsCaseInsensitive()
   {
-    var config = CreateConfiguration("""
+    var options = CreateOptions("""
         { "McpFiltering": { "Allowed": { "tools": ["getrandomnumber"] } } }
         """);
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
     var names = new[] { "GetRandomNumber", "Echo" };
 
     var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
@@ -89,11 +90,11 @@ public class AppSettingsPrimitiveFilteringStrategyTests
   [Test]
   public async Task AllowedTools_ReferencesNonExistentTool_ReturnsEmptyList()
   {
-    var config = CreateConfiguration("""
+    var options = CreateOptions("""
         { "McpFiltering": { "Allowed": { "tools": ["NonExistentTool"] } } }
         """);
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
     var names = new[] { "GetRandomNumber", "Echo" };
 
     var result = strategy.FilterPrimitives(McpPrimitiveType.Tool, names).ToList();
@@ -104,11 +105,11 @@ public class AppSettingsPrimitiveFilteringStrategyTests
   [Test]
   public async Task AllowedResources_ContainsSubset_ReturnsOnlyMatchingResources()
   {
-    var config = CreateConfiguration("""
+    var options = CreateOptions("""
         { "McpFiltering": { "Allowed": { "resources": ["Server Info", "Current Time"] } } }
         """);
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
     var names = new[] { "Server Info", "City Weather", "Process Info", "Current Time" };
 
     var result = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
@@ -121,11 +122,11 @@ public class AppSettingsPrimitiveFilteringStrategyTests
   [Test]
   public async Task AllowedResources_IsEmptyArray_ReturnsAllUnchanged()
   {
-    var config = CreateConfiguration("""
+    var options = CreateOptions("""
         { "McpFiltering": { "Allowed": { "resources": [] } } }
         """);
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
     var names = new[] { "Server Info", "Process Info" };
 
     var result = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
@@ -136,11 +137,11 @@ public class AppSettingsPrimitiveFilteringStrategyTests
   [Test]
   public async Task AllowedResources_KeyMissing_ReturnsAllUnchanged()
   {
-    var config = CreateConfiguration("""
+    var options = CreateOptions("""
         { "McpFiltering": { "Allowed": {} } }
         """);
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
     var names = new[] { "Server Info", "Process Info" };
 
     var result = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
@@ -151,11 +152,11 @@ public class AppSettingsPrimitiveFilteringStrategyTests
   [Test]
   public async Task AllowedResources_NameMatchingIsCaseInsensitive()
   {
-    var config = CreateConfiguration("""
+    var options = CreateOptions("""
         { "McpFiltering": { "Allowed": { "resources": ["server info"] } } }
         """);
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
     var names = new[] { "Server Info", "Process Info" };
 
     var result = strategy.FilterPrimitives(McpPrimitiveType.Resource, names).ToList();
@@ -167,11 +168,11 @@ public class AppSettingsPrimitiveFilteringStrategyTests
   [Test]
   public async Task AllowedPrompts_ContainsSubset_ReturnsOnlyMatchingPrompts()
   {
-    var config = CreateConfiguration("""
+    var options = CreateOptions("""
         { "McpFiltering": { "Allowed": { "prompts": ["Greeting", "Help"] } } }
         """);
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
     var names = new[] { "Greeting", "Help", "SecretPrompt" };
 
     var result = strategy.FilterPrimitives(McpPrimitiveType.Prompt, names).ToList();
@@ -184,11 +185,11 @@ public class AppSettingsPrimitiveFilteringStrategyTests
   [Test]
   public async Task AllowedPrompts_KeyMissing_ReturnsAllUnchanged()
   {
-    var config = CreateConfiguration("""
+    var options = CreateOptions("""
         { "McpFiltering": { "Allowed": {} } }
         """);
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
     var names = new[] { "Greeting", "Help" };
 
     var result = strategy.FilterPrimitives(McpPrimitiveType.Prompt, names).ToList();
@@ -199,11 +200,11 @@ public class AppSettingsPrimitiveFilteringStrategyTests
   [Test]
   public async Task AllowedTools_DoesNotAffectResources()
   {
-    var config = CreateConfiguration("""
+    var options = CreateOptions("""
         { "McpFiltering": { "Allowed": { "tools": ["MyTool"], "resources": ["MyResource"] } } }
         """);
 
-    var strategy = new AppSettingsPrimitiveFilteringStrategy(config, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
+    var strategy = new AppSettingsPrimitiveFilteringStrategy(options, NullLogger<AppSettingsPrimitiveFilteringStrategy>.Instance);
 
     var toolResult = strategy.FilterPrimitives(McpPrimitiveType.Tool,
         new[] { "MyTool", "OtherTool" }).ToList();

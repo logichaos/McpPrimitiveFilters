@@ -21,6 +21,8 @@ public sealed class OAuthOptions
 
   public string? ResourceDocumentation { get; set; }
 
+  public EmbeddedOAuthServerOptions EmbeddedOAuthServer { get; set; } = new();
+
   public Dictionary<string, OAuthSchemeConfig> Schemes { get; set; } = new();
 }
 
@@ -47,4 +49,9 @@ public sealed class OAuthSchemeConfig
   public string? Domain { get; set; }
 
   public string? ClientId { get; set; }
+}
+
+public sealed class EmbeddedOAuthServerOptions
+{
+  public bool Enabled { get; set; }
 }

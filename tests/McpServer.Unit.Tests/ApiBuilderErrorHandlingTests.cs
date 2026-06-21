@@ -111,10 +111,7 @@ public class ApiBuilderErrorHandlingTests
       return (Exception)Activator.CreateInstance(exceptionType)!;
     }
   }
-
-  /// <summary>
-  /// Provides test access to the internal <see cref="McpExceptionHandler"/>.
-  /// </summary>
+  
   private sealed class McpExceptionHandlerAccessor : IExceptionHandler
   {
     private readonly McpExceptionHandler _inner;

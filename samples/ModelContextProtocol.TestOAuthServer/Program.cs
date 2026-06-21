@@ -47,10 +47,16 @@ public class Program
     await _app.StopAsync();
   }
 
-  internal static WebApplication BuildApp(string[]? args = null,
-      Microsoft.AspNetCore.Connections.IConnectionListenerFactory? kestrelTransport = null)
+  public static WebApplication BuildApp(string[]? args = null,
+      Microsoft.AspNetCore.Connections.IConnectionListenerFactory? kestrelTransport = null,
+      IConfiguration? configuration = null)
   {
     var builder = WebApplication.CreateBuilder(args ?? []);
+
+    if (configuration is not null)
+    {
+      builder.Configuration.AddConfiguration(configuration);
+    }
 
     if (kestrelTransport is not null)
     {
@@ -68,10 +74,15 @@ public class Program
     var port = builder.Configuration.GetValue<int?>("OAuthServer:Port") ?? DefaultPort;
     builder.WebHost.UseKestrel(kestrelOptions =>
     {
-      kestrelOptions.ListenLocalhost(port, listenOptions =>
-          {
-          listenOptions.UseHttps();
-        });
+      if (port == 0)
+      {
+        kestrelOptions.Listen(System.Net.IPAddress.Loopback, 0, listenOptions => listenOptions.UseHttps());
+        kestrelOptions.Listen(System.Net.IPAddress.IPv6Loopback, 0, listenOptions => listenOptions.UseHttps());
+      }
+      else
+      {
+        kestrelOptions.ListenLocalhost(port, listenOptions => listenOptions.UseHttps());
+      }
     });
 
     var app = builder.Build();
@@ -175,7 +186,6 @@ public class Program
       return Results.NotFound();
     });
 
-    // JWKS endpoint
     app.MapGet("/.well-known/jwks.json", (HttpContext context) =>
     {
       var state = context.RequestServices.GetRequiredService<OAuthServerState>();
@@ -202,7 +212,6 @@ public class Program
       return Results.Ok(jwks);
     });
 
-    // Authorize endpoint
     app.MapGet("/authorize", (
         HttpContext context,
         [FromQuery] string client_id,
@@ -287,7 +296,6 @@ public class Program
       return Results.Redirect(redirectUrl);
     });
 
-    // Token endpoint
     app.MapPost("/token", async (HttpContext context) =>
     {
       var state = context.RequestServices.GetRequiredService<OAuthServerState>();
@@ -398,7 +406,6 @@ public class Program
       }
     });
 
-    // Introspection endpoint
     app.MapPost("/introspect", async (HttpContext context) =>
     {
       var state = context.RequestServices.GetRequiredService<OAuthServerState>();
@@ -434,7 +441,6 @@ public class Program
       return Results.Ok(new TokenIntrospectionResponse { Active = false });
     });
 
-    // Dynamic Client Registration endpoint (RFC 7591)
     app.MapPost("/register", async (HttpContext context) =>
     {
       var state = context.RequestServices.GetRequiredService<OAuthServerState>();

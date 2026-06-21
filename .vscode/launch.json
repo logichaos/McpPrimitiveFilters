@@ -5,16 +5,13 @@
   "version": "0.2.0",
   "configurations": [
    {
-    "name": "C#: TestOAuthServer Debug",
-    "type": "dotnet",
-    "request": "launch",
-    "projectPath": "${workspaceFolder}/tests/ModelContextProtocol.TestOAuthServer/ModelContextProtocol.TestOAuthServer.csproj"
-   } ,
-   {
     "name": "C#: McpServer Debug",
     "type": "dotnet",
     "request": "launch",
-    "projectPath": "${workspaceFolder}/samples/McpServer/McpServer.csproj"
+    "projectPath": "${workspaceFolder}/samples/McpServer/McpServer.csproj",
+    "env": {
+      "Mcp__OAuth__EmbeddedOAuthServer__Enabled": "true"
+    }
    }
   ]
 }

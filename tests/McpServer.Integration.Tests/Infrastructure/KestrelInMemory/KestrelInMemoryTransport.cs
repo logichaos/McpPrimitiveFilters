@@ -8,7 +8,6 @@ namespace McpServer.Integration.Tests.Infrastructure.KestrelInMemory;
 
 public sealed class KestrelInMemoryTransport : IConnectionListenerFactory
 {
-  // Socket accept queues keyed by listen port.
   private readonly ConcurrentDictionary<int, Channel<ConnectionContext>> _acceptQueues = [];
 
   public KestrelInMemoryConnection CreateConnection(EndPoint endpoint)

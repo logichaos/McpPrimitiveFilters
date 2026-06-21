@@ -38,166 +38,6 @@ public class OAuthFlowTests : OAuthTestBase
         transport, cancellationToken: TestContext.Current!.Execution.CancellationToken);
   }
 
-  // [Test]
-  // public async Task CannotAuthenticate_WithoutOAuthConfiguration()
-  // {
-  //     await using var app = await StartMcpServerAsync();
-
-  //     await using var transport = new HttpClientTransport(new()
-  //     {
-  //         Endpoint = new(McpServerUrl),
-  //     }, System.Net.Http.HttpClient, LoggerFactory);
-
-  //     var httpEx = await Assert.ThrowsAsync<HttpRequestException>(async () => await McpClient.CreateAsync(
-  //         transport, loggerFactory: LoggerFactory, cancellationToken: TestContext.Current.CancellationToken));
-
-  //     Assert.Equal(HttpStatusCode.Unauthorized, httpEx.StatusCode);
-  // }
-
-  // [Test]
-  // public async Task CannotAuthenticate_WithUnregisteredClient()
-  // {
-  //     await using var app = await StartMcpServerAsync();
-
-  //     await using var transport = new HttpClientTransport(new()
-  //     {
-  //         Endpoint = new(McpServerUrl),
-  //         OAuth = new()
-  //         {
-  //             ClientId = "unregistered-demo-client",
-  //             ClientSecret = "demo-secret",
-  //             RedirectUri = new Uri("http://localhost:1179/callback"),
-  //             AuthorizationRedirectDelegate = HandleAuthorizationUrlAsync,
-  //         },
-  //     }, System.Net.Http.HttpClient, LoggerFactory);
-
-  //     // The EqualException is thrown by HandleAuthorizationUrlAsync when the /authorize request gets a 400
-  //     var equalEx = await Assert.ThrowsAsync<EqualException>(async () => await McpClient.CreateAsync(
-  //         transport, loggerFactory: LoggerFactory, cancellationToken: TestContext.Current.CancellationToken));
-  // }
-
-  // [Test]
-  // public async Task CanAuthenticate_WithDynamicClientRegistration()
-  // {
-  //     await using var app = await StartMcpServerAsync();
-
-  //     await using var transport = new HttpClientTransport(new()
-  //     {
-  //         Endpoint = new(McpServerUrl),
-  //         OAuth = new ClientOAuthOptions()
-  //         {
-  //             RedirectUri = new Uri("http://localhost:1179/callback"),
-  //             AuthorizationRedirectDelegate = HandleAuthorizationUrlAsync,
-  //             DynamicClientRegistration = new()
-  //             {
-  //                 ClientName = "Test MCP Client",
-  //                 ClientUri = new Uri("https://example.com"),
-  //             },
-  //         },
-  //     }, System.Net.Http.HttpClient, LoggerFactory);
-
-  //     await using var client = await McpClient.CreateAsync(
-  //         transport, loggerFactory: LoggerFactory, cancellationToken: TestContext.Current.CancellationToken);
-  // }
-
-  // [Test]
-  // public async Task CanAuthenticate_WithClientMetadataDocument()
-  // {
-  //     await using var app = await StartMcpServerAsync();
-
-  //     await using var transport = new HttpClientTransport(new()
-  //     {
-  //         Endpoint = new(McpServerUrl),
-  //         OAuth = new ClientOAuthOptions()
-  //         {
-  //             RedirectUri = new Uri("http://localhost:1179/callback"),
-  //             AuthorizationRedirectDelegate = HandleAuthorizationUrlAsync,
-  //             ClientMetadataDocumentUri = new Uri(ClientMetadataDocumentUrl)
-  //         },
-  //     }, System.Net.Http.HttpClient, LoggerFactory);
-
-  //     await using var client = await McpClient.CreateAsync(
-  //         transport, loggerFactory: LoggerFactory, cancellationToken: TestContext.Current.CancellationToken);
-  // }
-
-  // [Test]
-  // public async Task UsesDynamicClientRegistration_WhenCimdNotSupported()
-  // {
-  //     // Disable CIMD support on the test OAuth server so the client
-  //     // falls back to dynamic registration even if a CIMD URL is provided.
-  //     ModelContextProtocol.TestOAuthServer.ClientIdMetadataDocumentSupported = false;
-
-  //     await using var app = await StartMcpServerAsync();
-
-  //     // Provide an invalid CIMD URL; if CIMD were used, auth would fail.
-  //     await using var transport = new HttpClientTransport(new()
-  //     {
-  //         Endpoint = new(McpServerUrl),
-  //         OAuth = new ClientOAuthOptions()
-  //         {
-  //             RedirectUri = new Uri("http://localhost:1179/callback"),
-  //             AuthorizationRedirectDelegate = HandleAuthorizationUrlAsync,
-  //             ClientMetadataDocumentUri = new Uri("http://invalid-cimd.example.com"),
-  //             DynamicClientRegistration = new()
-  //             {
-  //                 ClientName = "Test MCP Client (No CIMD)",
-  //                 ClientUri = new Uri("https://example.com/no-cimd"),
-  //             },
-  //         },
-  //     }, System.Net.Http.HttpClient, LoggerFactory);
-
-  //     // Should succeed via dynamic client registration.
-  //     await using var client = await McpClient.CreateAsync(
-  //         transport, loggerFactory: LoggerFactory, cancellationToken: TestContext.Current.CancellationToken);
-  // }
-
-  // [Test]
-  // public async Task DoesNotUseClientMetadataDocument_WhenClientIdIsSpecified()
-  // {
-  //     await using var app = await StartMcpServerAsync();
-
-  //     // Provide an invalid CIMD URL; if CIMD were used, auth would fail.
-  //     await using var transport = new HttpClientTransport(new()
-  //     {
-  //         Endpoint = new(McpServerUrl),
-  //         OAuth = new ClientOAuthOptions()
-  //         {
-  //             ClientId = "demo-client",
-  //             ClientSecret = "demo-secret",
-  //             RedirectUri = new Uri("http://localhost:1179/callback"),
-  //             AuthorizationRedirectDelegate = HandleAuthorizationUrlAsync,
-  //             ClientMetadataDocumentUri = new Uri("http://invalid-cimd.example.com"),
-  //         },
-  //     }, System.Net.Http.HttpClient, LoggerFactory);
-
-  //     await using var client = await McpClient.CreateAsync(
-  //         transport, loggerFactory: LoggerFactory, cancellationToken: TestContext.Current.CancellationToken);
-  // }
-
-  // [Theory]
-  // [InlineData("http://localhost:7029/client-metadata/cimd-client.json")] // Non-HTTPS Scheme
-  // [InlineData("http://localhost:7029")] // Missing path
-  // public async Task CannotAuthenticate_WithInvalidClientMetadataDocument(string uri)
-  // {
-  //     await using var app = await StartMcpServerAsync();
-
-  //     await using var transport = new HttpClientTransport(new()
-  //     {
-  //         Endpoint = new(McpServerUrl),
-  //         OAuth = new ClientOAuthOptions()
-  //         {
-  //             RedirectUri = new Uri("http://localhost:1179/callback"),
-  //             AuthorizationRedirectDelegate = HandleAuthorizationUrlAsync,
-  //             ClientMetadataDocumentUri = new Uri(uri),
-  //         },
-  //     }, System.Net.Http.HttpClient, LoggerFactory);
-
-  //     var ex = await Assert.ThrowsAsync<McpException>(() => McpClient.CreateAsync(
-  //         transport, loggerFactory: LoggerFactory, cancellationToken: TestContext.Current.CancellationToken));
-
-  //     Assert.StartsWith("Failed to handle unauthorized response", ex.Message);
-  // }
-
   [Test]
   public async Task CanAuthenticate_WithTokenRefresh()
   {
@@ -210,33 +50,27 @@ public class OAuthFlowTests : OAuthTestBase
 
     await using var app = await StartMcpServerAsync(configureMiddleware: app =>
     {
-      // Add middleware to intercept list tools requests and force a token refresh on the first call
       app.Use(async (context, next) =>
           {
           if (context.Request.Method == HttpMethods.Post && context.Request.Path == "/" && !hasForcedRefresh)
           {
-              // Enable buffering so we can read the request body multiple times
             context.Request.EnableBuffering();
 
-              // Read the request body to check if it's calling tools/list
             var message = await JsonSerializer.DeserializeAsync(
                     context.Request.Body,
                     McpJsonUtilities.DefaultOptions.GetTypeInfo(typeof(JsonRpcMessage)),
                     context.RequestAborted) as JsonRpcMessage;
 
-              // Reset the request body position so MapMcp can read it
             context.Request.Body.Position = 0;
 
-              // Check if this is a tools/list request
             if (message is JsonRpcRequest request && request.Method == "tools/list")
             {
               hasForcedRefresh = true;
 
-                // Return 401 to force token refresh
               await context.ChallengeAsync(JwtBearerDefaults.AuthenticationScheme);
               await context.Response.StartAsync(context.RequestAborted);
               await context.Response.Body.FlushAsync(context.RequestAborted);
-              return; // Short-circuit, don't call next()
+              return;
             }
           }
 

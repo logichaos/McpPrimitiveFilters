@@ -5,7 +5,7 @@ namespace McpServer.Integration.Tests.OAuth;
 
 public class OAuthHttpTests
 {
-  [ClassDataSource<OAuthWebApplicationFactory>(Shared = SharedType.PerTestSession)]
+  [ClassDataSource<OAuthWebApplicationFactory>(Shared = SharedType.PerClass)]
   public required OAuthWebApplicationFactory Factory { get; init; }
 
   [Test]
@@ -73,8 +73,7 @@ public class OAuthHttpTests
     var response = await client.GetAsync("/.well-known/oauth-protected-resource");
     var body = await response.Content.ReadAsStringAsync();
 
-    var oauthAuthority = Factory.OAuthServer.Server.BaseAddress!.ToString().TrimEnd('/');
-    await Assert.That(body).Contains(oauthAuthority);
+    await Assert.That(body).Contains(Factory.OAuthAuthority);
   }
 
   [Test]

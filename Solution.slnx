@@ -15,11 +15,11 @@
   <Folder Name="/samples/">
     <Project Path="samples/McpServer.Core/McpServer.Core.csproj" />
     <Project Path="samples/McpServer/McpServer.csproj" />
+    <Project Path="samples/ModelContextProtocol.TestOAuthServer/ModelContextProtocol.TestOAuthServer.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/McpPrimitiveFilters.Unit.Tests/McpPrimitiveFilters.Unit.Tests.csproj" />
     <Project Path="tests/McpServer.Integration.Tests/McpServer.Integration.Tests.csproj" />
     <Project Path="tests/McpServer.Unit.Tests/McpServer.Unit.Tests.csproj" />
-    <Project Path="tests/ModelContextProtocol.TestOAuthServer/ModelContextProtocol.TestOAuthServer.csproj" />
   </Folder>
 </Solution>

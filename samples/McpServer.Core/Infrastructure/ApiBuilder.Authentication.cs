@@ -33,17 +33,18 @@ public static partial class ApiBuilder
       this IServiceCollection services,
       IConfiguration configuration)
   {
+    var oauth = BindFromConfig<OAuthOptions>(configuration, OAuthOptions.SectionName);
+    var core = BindFromConfig<McpCoreOptions>(configuration, McpCoreOptions.SectionName);
+    return services.AddOAuth(oauth, core);
+  }
+
+  public static IServiceCollection AddOAuth(
+      this IServiceCollection services,
+      OAuthOptions oauth,
+      McpCoreOptions coreOptions)
+  {
     var loggerFactory = NullLoggerFactory.Instance;
     var logger = loggerFactory.CreateLogger("McpServer.OAuth");
-
-    var oauthSection = configuration.GetSection(OAuthOptions.SectionName);
-    if (!oauthSection.Exists())
-    {
-      LogOAuthSectionNotFound(logger, OAuthOptions.SectionName);
-      return services;
-    }
-
-    var oauth = oauthSection.Get<OAuthOptions>()!;
 
     if (oauth.Schemes.Count == 0)
     {
@@ -72,9 +73,9 @@ public static partial class ApiBuilder
 
     services.AddSingleton(new OAuthMarker());
 
-    var allowedOrigins = configuration
-        .GetSection("Mcp:AllowedOrigins")
-        .Get<string[]>() ?? ["http://localhost:5173", "http://localhost:6274"];
+    var allowedOrigins = coreOptions.AllowedOrigins.Length > 0
+        ? coreOptions.AllowedOrigins
+        : new[] { "http://localhost:5173", "http://localhost:6274" };
 
     services.AddCors(options =>
     {
@@ -201,5 +202,10 @@ public static partial class ApiBuilder
     }
 
     return null;
+  }
+
+  private static T BindFromConfig<T>(IConfiguration configuration, string sectionName) where T : class, new()
+  {
+    return configuration.GetSection(sectionName).Get<T>() ?? new T();
   }
 }

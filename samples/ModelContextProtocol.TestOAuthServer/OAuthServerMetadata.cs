@@ -72,7 +72,6 @@ internal sealed class OAuthServerMetadata
   [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
   public List<string>? CodeChallengeMethodsSupported { get; init; }
 
-  // OpenID Connect specific fields that are commonly included in OAuth metadata
   [JsonPropertyName("subject_types_supported")]
   [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
   public List<string>? SubjectTypesSupported { get; init; }

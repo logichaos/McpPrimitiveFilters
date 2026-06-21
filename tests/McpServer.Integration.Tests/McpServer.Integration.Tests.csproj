@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../samples/McpServer/McpServer.csproj" />
-    <ProjectReference Include="../ModelContextProtocol.TestOAuthServer/ModelContextProtocol.TestOAuthServer.csproj" />
+    <ProjectReference Include="../../samples/ModelContextProtocol.TestOAuthServer/ModelContextProtocol.TestOAuthServer.csproj" />
   </ItemGroup>
 
   <ItemGroup>

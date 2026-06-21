@@ -22,11 +22,6 @@ public static partial class ApiBuilder
 
     return services;
   }
-
-  /// <summary>
-  /// Registers the exception handler middleware. Must be called early in the pipeline —
-  /// before UseAuthentication, UseAuthorization, and endpoint mapping.
-  /// </summary>
   public static WebApplication UseErrorHandling(this WebApplication app)
   {
     app.UseExceptionHandler();

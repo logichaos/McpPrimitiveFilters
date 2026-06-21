@@ -47,9 +47,7 @@ public class ToolFilteringTests
   [Test]
   public async Task NoFilteringConfigured_ListToolsReturnsAllTools()
   {
-    // Uses the standard WebApplicationFactory with no AllowedTools config
     await using var factory = new ToolFilteringWebApplicationFactory();
-                                                                        // Default to "Testing" environment which has no AllowedTools
 
     var mcpServer = factory.CreateClient();
     var mcpClient = await CreateMcpClientAsync(mcpServer);
@@ -77,7 +75,6 @@ public class ToolFilteringTests
     var result = await mcpClient.CallToolAsync("get_random_number",
         new Dictionary<string, object?> { ["min"] = 1, ["max"] = 2 });
 
-    // Successful tool calls may have IsError = false or null
     await Assert.That(result.IsError).IsNotEqualTo(true);
   }
 
@@ -90,7 +87,6 @@ public class ToolFilteringTests
     var mcpServer = factory.CreateClient();
     var mcpClient = await CreateMcpClientAsync(mcpServer);
 
-    // echo is not in the allowlist — should be blocked
     var result = await mcpClient.CallToolAsync("echo",
         new Dictionary<string, object?> { ["message"] = "test" });
 

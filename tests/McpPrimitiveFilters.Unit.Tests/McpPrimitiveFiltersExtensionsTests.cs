@@ -18,7 +18,6 @@ public class McpPrimitiveFiltersExtensionsTests
     var services = new ServiceCollection();
     services.AddLogging();
     services.AddSingleton<ILoggerFactory>(_ => NullLoggerFactory.Instance);
-    services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
     return services;
   }
 
@@ -179,6 +178,41 @@ public class McpPrimitiveFiltersExtensionsTests
     await Assert.That(strategies.Any(s => s is OAuthClaimsFilteringStrategy)).IsTrue();
     await Assert.That(strategies.Any(s => s is CustomTestStrategy)).IsTrue();
     await Assert.That(strategies.Any(s => s is AppSettingsPrimitiveFilteringStrategy)).IsFalse();
+  }
+
+  [Test]
+  public async Task ConfigurationOverload_RegistersMcpFilteringOptions()
+  {
+    var services = CreateServices();
+    var config = new ConfigurationBuilder()
+        .AddInMemoryCollection(new Dictionary<string, string?>
+        {
+          ["McpFiltering:Allowed:tools:0"] = "ToolA",
+          ["McpFiltering:Allowed:resources:0"] = "ResourceA",
+        })
+        .Build();
+    services.AddMcpPrimitiveFilters(config);
+    var sp = services.BuildServiceProvider();
+
+    var options = sp.GetRequiredService<IOptions<McpFilteringOptions>>().Value;
+
+    await Assert.That(options.Allowed.Tools).IsEquivalentTo(["ToolA"]);
+    await Assert.That(options.Allowed.Resources).IsEquivalentTo(["ResourceA"]);
+    await Assert.That(options.Allowed.Prompts).Count().IsEqualTo(0);
+  }
+
+  [Test]
+  public async Task NoConfigurationOverload_McpFilteringOptionsHaveDefaults()
+  {
+    var services = CreateServices();
+    services.AddMcpPrimitiveFilters();
+    var sp = services.BuildServiceProvider();
+
+    var options = sp.GetRequiredService<IOptions<McpFilteringOptions>>().Value;
+
+    await Assert.That(options.Allowed.Tools).Count().IsEqualTo(0);
+    await Assert.That(options.Allowed.Resources).Count().IsEqualTo(0);
+    await Assert.That(options.Allowed.Prompts).Count().IsEqualTo(0);
   }
 
   private sealed class CustomTestStrategy : McpPrimitiveFilteringStrategy

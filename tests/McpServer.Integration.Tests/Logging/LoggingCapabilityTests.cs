@@ -93,8 +93,6 @@ public class LoggingCapabilityTests
     }
   }
 
-  // notifications/message is deprecated in MCP spec 2026-07-28
-  // in favor of stderr (stdio) or OpenTelemetry (HTTP).
   private static (ConcurrentBag<LoggingMessageNotificationParams> Logs, IAsyncDisposable Subscription)
       CaptureLogNotifications(McpClient mcpClient)
   {
